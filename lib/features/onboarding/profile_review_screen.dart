@@ -87,6 +87,10 @@ List<String> _supportSummary(PrivateSupport? s) {
 /// Shows everything the user entered, grouped by section, with an Edit link per
 /// section. "Save profile" persists via the profile service stub and shows a
 /// completion state.
+///
+/// Edit links [push] the section with `extra: true` so the section opens in
+/// edit mode and returns to this review screen after one screen, instead of
+/// replacing the stack and re-walking the downstream flow.
 class ProfileReviewScreen extends ConsumerStatefulWidget {
   const ProfileReviewScreen({super.key});
 
@@ -121,6 +125,7 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
       return _buildCompletion(context, theme);
     }
 
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final draft = ref.watch(onboardingDraftProvider);
     final access = ref.watch(accessPreferencesNotifierProvider);
     final contact = draft.contact;
@@ -145,14 +150,16 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     _ReviewSection(
                       title: AppStrings.sectionName,
-                      onEdit: () => context.goNamed(RouteNames.contact),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.contact, extra: true),
                       children: [
                         _valueOrPlaceholder(contact.fullName),
                       ],
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionContact,
-                      onEdit: () => context.goNamed(RouteNames.contact),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.contact, extra: true),
                       children: [
                         _valueOrPlaceholder(contact.phone, fallback: AppStrings.notProvided),
                         if (contact.email != null && contact.email!.isNotEmpty)
@@ -161,7 +168,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionIdentity,
-                      onEdit: () => context.goNamed(RouteNames.identity),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.identity, extra: true),
                       children: [
                         _valueOrPlaceholder(
                           draft.identityRoute == null
@@ -172,7 +180,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionSkills,
-                      onEdit: () => context.goNamed(RouteNames.skills),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.skills, extra: true),
                       children: [
                         _valueOrPlaceholder(skills.occupation, fallback: AppStrings.notProvided),
                         const SizedBox(height: AppSpacing.xs),
@@ -181,7 +190,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionLanguages,
-                      onEdit: () => context.goNamed(RouteNames.skills),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.skills, extra: true),
                       children: [
                         _valueOrPlaceholder(
                           skills.languages.isEmpty
@@ -192,7 +202,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionAccessPreferences,
-                      onEdit: () => context.goNamed(RouteNames.accessPreferences),
+                      onEdit: () => context.pushNamed(RouteNames.accessPreferences,
+                          extra: true),
                       children: [
                         for (final item in accessItems)
                           Padding(
@@ -203,7 +214,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     ),
                     _ReviewSection(
                       title: AppStrings.sectionSupport,
-                      onEdit: () => context.goNamed(RouteNames.support),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.support, extra: true),
                       children: [
                         if (supportItems.isEmpty)
                           _valueOrPlaceholder(AppStrings.notProvided)
@@ -224,10 +236,28 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
               child: FilledButton(
                 onPressed: _saving ? null : _saveProfile,
                 child: _saving
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                    ? Semantics(
+                        liveRegion: true,
+                        label: AppStrings.saving,
+                        child: disableAnimations
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.colorScheme.primary,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
                       )
                     : const Text(AppStrings.saveProfile),
               ),

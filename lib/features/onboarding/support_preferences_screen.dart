@@ -10,8 +10,14 @@ import '../../../models/applicant_profile_model.dart';
 
 /// Optional support preferences. These stay private and are never shared with
 /// employers. The user can always skip this step.
+///
+/// When [editMode] is true the screen was pushed from Profile Review to edit
+/// this section; saving or skipping pops back to review instead of advancing
+/// to the profile review screen.
 class SupportPreferencesScreen extends ConsumerStatefulWidget {
-  const SupportPreferencesScreen({super.key});
+  const SupportPreferencesScreen({super.key, this.editMode = false});
+
+  final bool editMode;
 
   @override
   ConsumerState<SupportPreferencesScreen> createState() =>
@@ -40,7 +46,13 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
     super.dispose();
   }
 
-  void _goToReview() => context.pushNamed(RouteNames.profileReview);
+  void _goToReview() {
+    if (widget.editMode) {
+      context.pop();
+    } else {
+      context.pushNamed(RouteNames.profileReview);
+    }
+  }
 
   void _save() {
     final support = PrivateSupport(

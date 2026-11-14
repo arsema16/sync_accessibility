@@ -11,8 +11,14 @@ import '../../../models/applicant_profile_model.dart';
 /// Lets the user pick the interaction preferences that form their Access
 /// Passport. These preferences also drive the app-wide text scale and theme
 /// variant.
+///
+/// When [editMode] is true the screen was pushed from Profile Review to edit
+/// this section; "Save and continue" pops back to review instead of advancing
+/// to the contact screen.
 class AccessPreferencesScreen extends ConsumerWidget {
-  const AccessPreferencesScreen({super.key});
+  const AccessPreferencesScreen({super.key, this.editMode = false});
+
+  final bool editMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -103,7 +109,13 @@ class AccessPreferencesScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(AppSpacing.pagePadding),
               child: FilledButton(
-                onPressed: () => context.pushNamed(RouteNames.contact),
+                onPressed: () {
+                  if (editMode) {
+                    context.pop();
+                  } else {
+                    context.pushNamed(RouteNames.contact);
+                  }
+                },
                 child: const Text(AppStrings.saveAndContinue),
               ),
             ),

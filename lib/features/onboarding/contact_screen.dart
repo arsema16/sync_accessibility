@@ -10,8 +10,14 @@ import '../../../shared/widgets/form_step.dart';
 import '../../../shared/widgets/question_screen.dart';
 
 /// Collects full name, phone and (optional) email, one question per screen.
+///
+/// When [editMode] is true the screen was pushed from Profile Review to edit
+/// this section; completing it pops back to review instead of advancing to the
+/// identity route.
 class ContactScreen extends ConsumerWidget {
-  const ContactScreen({super.key});
+  const ContactScreen({super.key, this.editMode = false});
+
+  final bool editMode;
 
   String? _phoneValidator(String value) {
     if (value.isEmpty) {
@@ -76,7 +82,11 @@ class ContactScreen extends ConsumerWidget {
           email: email.isEmpty ? null : email,
         );
         ref.read(onboardingDraftProvider.notifier).setContact(updated);
-        context.pushNamed(RouteNames.identity);
+        if (editMode) {
+          context.pop();
+        } else {
+          context.pushNamed(RouteNames.identity);
+        }
       },
     );
   }

@@ -11,7 +11,12 @@ import 'form_step.dart';
 ///   - Progress is shown visually and announced via a [Semantics] live region.
 ///   - Every interactive control meets the 48dp minimum tap target.
 ///   - Error messages use an icon AND text (never colour alone) and are
-///     announced via a [Semantics] live region.
+///     announced via a [Semantics] live region. They are NOT also rendered as
+///     Material `errorText` (which is colour-only and would duplicate the
+///     accessible copy).
+///   - Progress and loading indicators honour [MediaQuery.disableAnimations]:
+///     when the OS asks for reduced motion the progress bar is drawn as a
+///     static fraction instead of animating.
 ///   - There are no forced timeouts anywhere.
 ///   - Voice input is always paired with a typed fallback text field.
 class QuestionScreen extends StatefulWidget {
@@ -228,6 +233,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
   }
 
   Widget _buildProgress(ThemeData theme) {
+    final fraction = (_current + 1) / _total;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
@@ -249,10 +256,26 @@ class _QuestionScreenState extends State<QuestionScreen> {
           const SizedBox(height: AppSpacing.sm),
           ClipRRect(
             borderRadius: const BorderRadius.all(Radius.circular(8)),
-            child: LinearProgressIndicator(
-              value: (_current + 1) / _total,
-              minHeight: 8,
-            ),
+            child: disableAnimations
+                ? SizedBox(
+                    height: 8,
+                    child: ColoredBox(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: FractionallySizedBox(
+                          widthFactor: fraction,
+                          child: ColoredBox(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : LinearProgressIndicator(
+                    value: fraction,
+                    minHeight: 8,
+                  ),
           ),
         ],
       ),
@@ -337,7 +360,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
           decoration: InputDecoration(
             labelText: _step.title,
             hintText: _step.hint,
-            errorText: _error,
           ),
           onSubmitted: (_) => _advance(),
         ),
@@ -360,7 +382,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
           decoration: InputDecoration(
             labelText: _step.title,
             hintText: _step.hint,
-            errorText: _error,
           ),
           onSubmitted: (_) => _advance(),
         ),

@@ -10,8 +10,14 @@ import '../../../shared/widgets/form_step.dart';
 import '../../../shared/widgets/question_screen.dart';
 
 /// Lets the user pick how they will verify their identity (single choice).
+///
+/// When [editMode] is true the screen was pushed from Profile Review to edit
+/// this section; completing it pops back to review instead of advancing to the
+/// skills screen.
 class IdentityRouteScreen extends ConsumerWidget {
-  const IdentityRouteScreen({super.key});
+  const IdentityRouteScreen({super.key, this.editMode = false});
+
+  final bool editMode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +65,11 @@ class IdentityRouteScreen extends ConsumerWidget {
           orElse: () => IdentityRoute.nationalId,
         );
         ref.read(onboardingDraftProvider.notifier).setIdentityRoute(route);
-        context.pushNamed(RouteNames.skills);
+        if (editMode) {
+          context.pop();
+        } else {
+          context.pushNamed(RouteNames.skills);
+        }
       },
     );
   }

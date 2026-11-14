@@ -12,60 +12,71 @@ import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../constants/route_names.dart';
 
+/// The flat route table. Extracted so tests can build a [GoRouter] with a
+/// different [GoRouter.initialLocation] against the same screens and builders.
+///
+/// Onboarding screens that can be edited from Profile Review read
+/// [GoRouterState.extra]: when it is `true` the screen is in "edit mode" and
+/// completing it pops back to review instead of advancing the flow.
+final List<RouteBase> appRouteList = <RouteBase>[
+  GoRoute(
+    name: RouteNames.welcome,
+    path: AppRoutes.welcome,
+    builder: (context, state) => const WelcomeScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.accessPreferences,
+    path: AppRoutes.accessPreferences,
+    builder: (context, state) =>
+        AccessPreferencesScreen(editMode: state.extra == true),
+  ),
+  GoRoute(
+    name: RouteNames.contact,
+    path: AppRoutes.contact,
+    builder: (context, state) => ContactScreen(editMode: state.extra == true),
+  ),
+  GoRoute(
+    name: RouteNames.identity,
+    path: AppRoutes.identity,
+    builder: (context, state) =>
+        IdentityRouteScreen(editMode: state.extra == true),
+  ),
+  GoRoute(
+    name: RouteNames.skills,
+    path: AppRoutes.skills,
+    builder: (context, state) => SkillsScreen(editMode: state.extra == true),
+  ),
+  GoRoute(
+    name: RouteNames.support,
+    path: AppRoutes.support,
+    builder: (context, state) =>
+        SupportPreferencesScreen(editMode: state.extra == true),
+  ),
+  GoRoute(
+    name: RouteNames.profileReview,
+    path: AppRoutes.profileReview,
+    builder: (context, state) => const ProfileReviewScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.signIn,
+    path: AppRoutes.signIn,
+    builder: (context, state) => const SignInScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.jobs,
+    path: AppRoutes.jobs,
+    builder: (context, state) => const JobsScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.profile,
+    path: AppRoutes.profile,
+    builder: (context, state) => const ProfileScreen(),
+  ),
+];
+
 /// The app's [GoRouter]. Every onboarding screen has a named route, plus stub
 /// routes for the job/application flow (Phase 2).
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
-  routes: <RouteBase>[
-    GoRoute(
-      name: RouteNames.welcome,
-      path: AppRoutes.welcome,
-      builder: (context, state) => const WelcomeScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.accessPreferences,
-      path: AppRoutes.accessPreferences,
-      builder: (context, state) => const AccessPreferencesScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.contact,
-      path: AppRoutes.contact,
-      builder: (context, state) => const ContactScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.identity,
-      path: AppRoutes.identity,
-      builder: (context, state) => const IdentityRouteScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.skills,
-      path: AppRoutes.skills,
-      builder: (context, state) => const SkillsScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.support,
-      path: AppRoutes.support,
-      builder: (context, state) => const SupportPreferencesScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.profileReview,
-      path: AppRoutes.profileReview,
-      builder: (context, state) => const ProfileReviewScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.signIn,
-      path: AppRoutes.signIn,
-      builder: (context, state) => const SignInScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.jobs,
-      path: AppRoutes.jobs,
-      builder: (context, state) => const JobsScreen(),
-    ),
-    GoRoute(
-      name: RouteNames.profile,
-      path: AppRoutes.profile,
-      builder: (context, state) => const ProfileScreen(),
-    ),
-  ],
+  routes: appRouteList,
 );

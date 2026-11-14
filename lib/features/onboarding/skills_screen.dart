@@ -11,8 +11,14 @@ import '../../../shared/widgets/question_screen.dart';
 
 /// Collects occupation, education level, key skills and languages. Free-text
 /// steps include a voice slot (typed fallback always available).
+///
+/// When [editMode] is true the screen was pushed from Profile Review to edit
+/// this section; completing it pops back to review instead of advancing to the
+/// support screen.
 class SkillsScreen extends ConsumerWidget {
-  const SkillsScreen({super.key});
+  const SkillsScreen({super.key, this.editMode = false});
+
+  final bool editMode;
 
   static List<String> _split(String value) => value
       .split(',')
@@ -84,7 +90,11 @@ class SkillsScreen extends ConsumerWidget {
                 languages: languages,
               ),
             );
-        context.pushNamed(RouteNames.support);
+        if (editMode) {
+          context.pop();
+        } else {
+          context.pushNamed(RouteNames.support);
+        }
       },
     );
   }

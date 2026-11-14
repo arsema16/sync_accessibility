@@ -33,6 +33,19 @@ class PersonalContact extends Equatable {
         email: email ?? this.email,
       );
 
+  /// Serialise for [SharedPreferences] / future backend persistence.
+  Map<String, Object?> toMap() => <String, Object?>{
+        'fullName': fullName,
+        'phone': phone,
+        'email': email,
+      };
+
+  factory PersonalContact.fromMap(Map<String, dynamic> map) => PersonalContact(
+        fullName: (map['fullName'] as String?) ?? '',
+        phone: (map['phone'] as String?) ?? '',
+        email: map['email'] as String?,
+      );
+
   @override
   List<Object?> get props => [fullName, phone, email];
 }
@@ -70,6 +83,31 @@ class SkillsInfo extends Equatable {
         keySkills: keySkills ?? this.keySkills,
         languages: languages ?? this.languages,
       );
+
+  /// Serialise for [SharedPreferences] / future backend persistence.
+  Map<String, Object?> toMap() => <String, Object?>{
+        'occupation': occupation,
+        'educationLevel': educationLevel.name,
+        'keySkills': keySkills,
+        'languages': languages,
+      };
+
+  factory SkillsInfo.fromMap(Map<String, dynamic> map) => SkillsInfo(
+        occupation: (map['occupation'] as String?) ?? '',
+        educationLevel: EducationLevel.values.firstWhere(
+          (e) => e.name == map['educationLevel'],
+          orElse: () => EducationLevel.noneOrOther,
+        ),
+        keySkills: _toStringList(map['keySkills']),
+        languages: _toStringList(map['languages']),
+      );
+
+  static List<String> _toStringList(Object? raw) {
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    return const <String>[];
+  }
 
   @override
   List<Object?> get props => [occupation, educationLevel, keySkills, languages];
@@ -187,6 +225,21 @@ class PrivateSupport extends Equatable {
         other: other ?? this.other,
       );
 
+  /// Serialise for [SharedPreferences] / future backend persistence.
+  Map<String, Object?> toMap() => <String, Object?>{
+        'writtenInstructions': writtenInstructions,
+        'extraInterviewTime': extraInterviewTime,
+        'remoteInterview': remoteInterview,
+        'other': other,
+      };
+
+  factory PrivateSupport.fromMap(Map<String, dynamic> map) => PrivateSupport(
+        writtenInstructions: map['writtenInstructions'] == true,
+        extraInterviewTime: map['extraInterviewTime'] == true,
+        remoteInterview: map['remoteInterview'] == true,
+        other: map['other'] as String?,
+      );
+
   @override
   List<Object?> get props => [
         writtenInstructions,
@@ -245,6 +298,56 @@ class ApplicantProfile extends Equatable {
         privateSupport: privateSupport ?? this.privateSupport,
         updatedAt: updatedAt ?? this.updatedAt,
       );
+
+  /// Serialise for [SharedPreferences] (onboarding draft) and future backend
+  /// persistence. The Access Passport kept on the draft is the empty default;
+  /// the live passport lives in [AccessPreferencesNotifier] and is merged in at
+  /// save time on the Profile Review screen.
+  Map<String, Object?> toMap() => <String, Object?>{
+        'id': id,
+        'userId': userId,
+        'contact': contact.toMap(),
+        'identityRoute': identityRoute?.name,
+        'skills': skills.toMap(),
+        'accessPassport': accessPassport.toMap(),
+        'privateSupport': privateSupport?.toMap(),
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+
+  /// Deserialise from [SharedPreferences] / a future backend. Missing or
+  /// malformed sections fall back to their empty defaults so a partially
+  /// stored draft never crashes the flow.
+  factory ApplicantProfile.fromMap(Map<String, dynamic> map) {
+    final contactRaw = map['contact'];
+    final skillsRaw = map['skills'];
+    final supportRaw = map['privateSupport'];
+    final accessRaw = map['accessPassport'];
+    return ApplicantProfile(
+      id: map['id'] as String?,
+      userId: map['userId'] as String?,
+      contact: contactRaw is Map
+          ? PersonalContact.fromMap(Map<String, dynamic>.from(contactRaw))
+          : PersonalContact.empty(),
+      identityRoute: map['identityRoute'] is String
+          ? IdentityRoute.values.firstWhere(
+              (r) => r.name == map['identityRoute'],
+              orElse: () => IdentityRoute.nationalId,
+            )
+          : null,
+      skills: skillsRaw is Map
+          ? SkillsInfo.fromMap(Map<String, dynamic>.from(skillsRaw))
+          : SkillsInfo.empty(),
+      accessPassport: accessRaw is Map
+          ? AccessPassport.fromMap(Map<String, dynamic>.from(accessRaw))
+          : AccessPassport.empty(),
+      privateSupport: supportRaw is Map
+          ? PrivateSupport.fromMap(Map<String, dynamic>.from(supportRaw))
+          : null,
+      updatedAt: map['updatedAt'] is String
+          ? DateTime.tryParse(map['updatedAt'] as String)
+          : null,
+    );
+  }
 
   @override
   List<Object?> get props => [

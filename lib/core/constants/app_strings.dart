@@ -133,6 +133,7 @@ class AppStrings {
   static const String sectionSupport = 'Support preferences';
   static const String notProvided = 'Not provided';
   static const String saveProfile = 'Save profile';
+  static const String saving = 'Saving…';
   static const String profileSavedTitle = 'Profile saved';
   static const String profileSavedBody =
       'Your profile is ready. You can now browse jobs.';

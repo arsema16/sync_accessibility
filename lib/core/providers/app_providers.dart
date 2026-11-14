@@ -96,21 +96,53 @@ final accessPreferencesNotifierProvider =
   AccessPreferencesNotifier.new,
 );
 
+const String _onboardingDraftKey = 'sync.onboarding_draft';
+
 /// The applicant profile being built during onboarding. The Access Passport
 /// is kept separately (in [accessPreferencesNotifierProvider]) and merged in
 /// at save time on the Profile Review screen.
+///
+/// The draft is persisted to [SharedPreferences] on every change so a user is
+/// not dropped mid-flow if the process is killed; it is restored on the next
+/// build.
 class OnboardingDraftNotifier extends Notifier<ApplicantProfile> {
   @override
-  ApplicantProfile build() => ApplicantProfile.empty();
+  ApplicantProfile build() {
+    final prefs = ref.read(sharedPreferencesProvider);
+    return _load(prefs);
+  }
 
   void setContact(PersonalContact contact) =>
-      state = state.copyWith(contact: contact);
+      _persist(state.copyWith(contact: contact));
   void setIdentityRoute(IdentityRoute route) =>
-      state = state.copyWith(identityRoute: route);
-  void setSkills(SkillsInfo skills) => state = state.copyWith(skills: skills);
+      _persist(state.copyWith(identityRoute: route));
+  void setSkills(SkillsInfo skills) => _persist(state.copyWith(skills: skills));
   void setPrivateSupport(PrivateSupport? support) =>
-      state = state.copyWith(privateSupport: support);
-  void reset() => state = ApplicantProfile.empty();
+      _persist(state.copyWith(privateSupport: support));
+  void reset() => _persist(ApplicantProfile.empty());
+
+  void _persist(ApplicantProfile next) {
+    state = next;
+    ref
+        .read(sharedPreferencesProvider)
+        .setString(_onboardingDraftKey, jsonEncode(next.toMap()));
+  }
+
+  static ApplicantProfile _load(SharedPreferences prefs) {
+    final raw = prefs.getString(_onboardingDraftKey);
+    if (raw == null) {
+      return ApplicantProfile.empty();
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return ApplicantProfile.fromMap(decoded);
+      }
+    } catch (_) {
+      // Ignore malformed entries and fall back to an empty draft.
+    }
+    return ApplicantProfile.empty();
+  }
 }
 
 final onboardingDraftProvider =
