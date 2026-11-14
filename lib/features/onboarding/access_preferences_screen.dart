@@ -25,6 +25,13 @@ class AccessPreferencesScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final access = ref.watch(accessPreferencesNotifierProvider);
     final notifier = ref.read(accessPreferencesNotifierProvider.notifier);
+    final readAloud = ref.read(readAloudProvider);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (access.readAloud) {
+        readAloud(AppStrings.accessPreferencesHeading);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.accessPreferencesHeading)),

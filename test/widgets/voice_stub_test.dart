@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sync_accessibility/core/constants/app_strings.dart';
+import 'package:sync_accessibility/core/providers/app_providers.dart';
 import 'package:sync_accessibility/shared/widgets/form_step.dart';
 import 'package:sync_accessibility/shared/widgets/question_screen.dart';
 
@@ -11,18 +14,30 @@ import 'package:sync_accessibility/shared/widgets/question_screen.dart';
 void main() {
   testWidgets('voice stub returns empty and shows the typed-fallback hint',
       (tester) async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+
+    // Override voiceInputProvider with a stub that always returns empty string.
+    Future<String> emptyVoice() async => '';
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: QuestionScreen(
-          steps: const <FormStep>[
-            FormStep(
-              id: 'occupation',
-              title: AppStrings.occupationQuestion,
-              hint: AppStrings.occupationHint,
-              inputType: FormInputType.voice,
-            ),
-          ],
-          onComplete: (_) {},
+      ProviderScope(
+        overrides: <Override>[
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          voiceInputProvider.overrideWithValue(emptyVoice),
+        ],
+        child: MaterialApp(
+          home: QuestionScreen(
+            steps: const <FormStep>[
+              FormStep(
+                id: 'occupation',
+                title: AppStrings.occupationQuestion,
+                hint: AppStrings.occupationHint,
+                inputType: FormInputType.voice,
+              ),
+            ],
+            onComplete: (_) {},
+          ),
         ),
       ),
     );

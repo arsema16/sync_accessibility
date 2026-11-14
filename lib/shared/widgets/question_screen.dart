@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/access/access_callbacks.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_spacing.dart';
 import 'form_step.dart';
 
@@ -19,7 +20,8 @@ import 'form_step.dart';
 ///     static fraction instead of animating.
 ///   - There are no forced timeouts anywhere.
 ///   - Voice input is always paired with a typed fallback text field.
-class QuestionScreen extends StatefulWidget {
+///   - Read-aloud fires on each step if the user has enabled that preference.
+class QuestionScreen extends ConsumerStatefulWidget {
   const QuestionScreen({
     super.key,
     required this.steps,
@@ -27,8 +29,7 @@ class QuestionScreen extends StatefulWidget {
     this.flowTitle,
     this.initialAnswers,
     this.finalStepLabel = AppStrings.continueLabel,
-    VoiceInputCallback? voiceInput,
-  }) : voiceInput = voiceInput ?? _noVoiceInput;
+  });
 
   final List<FormStep> steps;
   final void Function(Map<String, Object> answers) onComplete;
@@ -41,17 +42,11 @@ class QuestionScreen extends StatefulWidget {
   /// Label shown on the advance button at the final step.
   final String finalStepLabel;
 
-  /// Injected voice capability. The stub returns an empty string; Bethel wires
-  /// the real speech API. Typed fallback is always available regardless.
-  final VoiceInputCallback voiceInput;
-
-  static Future<String> _noVoiceInput() async => '';
-
   @override
-  State<QuestionScreen> createState() => _QuestionScreenState();
+  ConsumerState<QuestionScreen> createState() => _QuestionScreenState();
 }
 
-class _QuestionScreenState extends State<QuestionScreen> {
+class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   late final TextEditingController _textController = TextEditingController();
   late final FocusNode _focusNode = FocusNode();
 
@@ -67,6 +62,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
     super.initState();
     _textController.addListener(_onTextChanged);
     _loadCurrentIntoController();
+    _readCurrentTitle();
   }
 
   void _onTextChanged() {
@@ -87,6 +83,13 @@ class _QuestionScreenState extends State<QuestionScreen> {
   int get _total => widget.steps.length;
 
   bool get _isLast => _current == widget.steps.length - 1;
+
+  void _readCurrentTitle() {
+    final access = ref.read(accessPreferencesNotifierProvider);
+    if (access.readAloud) {
+      ref.read(readAloudProvider)(_step.title);
+    }
+  }
 
   void _loadCurrentIntoController() {
     if (_step.inputType == FormInputType.text ||
@@ -148,6 +151,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
         _current += 1;
         _loadCurrentIntoController();
       });
+      _readCurrentTitle();
       if (_step.inputType == FormInputType.text ||
           _step.inputType == FormInputType.voice) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -167,6 +171,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
         _current -= 1;
         _loadCurrentIntoController();
       });
+      _readCurrentTitle();
     } else {
       Navigator.of(context).maybePop();
     }
@@ -178,7 +183,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
       _showVoiceHint = false;
     });
     try {
-      final result = await widget.voiceInput();
+      final voiceInput = ref.read(voiceInputProvider);
+      final result = await voiceInput();
       if (!mounted) {
         return;
       }
@@ -191,7 +197,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
           offset: _textController.text.length,
         );
       } else {
-        // The stub returns empty; surface that typed fallback is the way.
+        // No result or STT unavailable; show typed-fallback hint.
         setState(() => _showVoiceHint = true);
       }
     } finally {

@@ -33,7 +33,6 @@ class SkillsScreen extends ConsumerWidget {
     return QuestionScreen(
       flowTitle: AppStrings.skillsFlowTitle,
       finalStepLabel: AppStrings.continueLabel,
-      voiceInput: ref.read(voiceInputProvider),
       initialAnswers: <String, Object>{
         if (skills.occupation.isNotEmpty) 'occupation': skills.occupation,
         'education': skills.educationLevel.name,

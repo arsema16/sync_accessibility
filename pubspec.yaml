@@ -47,6 +47,12 @@ dependencies:
   # Persist access preferences locally between sessions.
   shared_preferences: ^2.3.4
 
+  # Text-to-speech (read aloud).
+  flutter_tts: ^4.2.0
+
+  # Speech-to-text (voice input).
+  speech_to_text: ^7.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,20 +1,52 @@
-// Capabilities that are stubbed for now and wired by another teammate.
-//
-// Both are injected through riverpod providers (see
-// `lib/core/providers/app_providers.dart`) so they can be overridden the same
-// way as the services.
+import 'dart:async';
+
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 /// Invoked when the user taps the mic button on a voice-capable form step.
 ///
 /// Returns the recognised text, or an empty string if nothing was recognised.
-/// The stub returns an empty string so typed fallback always remains available.
 typedef VoiceInputCallback = Future<String> Function();
 
-/// Invoked when the user asks SYNC to read text aloud. The stub is a no-op.
+/// Invoked when the app reads text aloud.
 typedef ReadAloudCallback = void Function(String text);
 
-// TODO(bethel): wire the real speech-recognition API behind voiceInputStub.
-Future<String> voiceInputStub() async => '';
+/// Returns a [VoiceInputCallback] backed by the device speech recogniser.
+/// Returns empty string if recognition is unavailable or nothing is heard.
+VoiceInputCallback makeVoiceInputCallback() {
+  final stt = SpeechToText();
+  return () async {
+    try {
+      final available = await stt.initialize();
+      if (!available) return '';
+      final completer = Completer<String>();
+      await stt.listen(
+        onResult: (result) {
+          if (result.finalResult) {
+            completer.complete(result.recognizedWords);
+          }
+        },
+        listenOptions: SpeechListenOptions(
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 4),
+          cancelOnError: true,
+        ),
+      );
+      return await completer.future.timeout(
+        const Duration(seconds: 35),
+        onTimeout: () => '',
+      );
+    } catch (_) {
+      return '';
+    }
+  };
+}
 
-// TODO(bethel): wire the real text-to-speech API behind readAloudStub.
-void readAloudStub(String _) {}
+/// Returns a [ReadAloudCallback] backed by [FlutterTts].
+ReadAloudCallback makeReadAloudCallback() {
+  final tts = FlutterTts();
+  tts.setLanguage('en-US');
+  return (String text) {
+    tts.speak(text);
+  };
+}

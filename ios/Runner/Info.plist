@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SYNC needs microphone access so you can answer questions by voice.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>SYNC uses speech recognition to transcribe your voice answers.</string>
 </dict>
 </plist>

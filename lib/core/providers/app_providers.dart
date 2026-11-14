@@ -35,14 +35,14 @@ final jobServiceProvider = Provider<JobService>(
   (ref) => ref.read(serviceLocatorProvider).jobs,
 );
 
-/// Voice input capability. Stubbed — returns empty string. Bethel overrides.
+/// Voice input capability backed by the device speech recogniser.
 final voiceInputProvider = Provider<VoiceInputCallback>(
-  (ref) => voiceInputStub,
+  (ref) => makeVoiceInputCallback(),
 );
 
-/// Read-aloud capability. Stubbed — no-op. Bethel overrides.
+/// Read-aloud capability backed by FlutterTts.
 final readAloudProvider = Provider<ReadAloudCallback>(
-  (ref) => readAloudStub,
+  (ref) => makeReadAloudCallback(),
 );
 
 const String _accessPrefsKey = 'sync.access_passport';
