@@ -17,22 +17,34 @@ import '../../../shared/widgets/sync_option_card.dart';
 /// When [editMode] is true the screen was pushed from Profile Review to edit
 /// this section; "Save and continue" pops back to review instead of advancing
 /// to the contact screen.
-class AccessPreferencesScreen extends ConsumerWidget {
+class AccessPreferencesScreen extends ConsumerStatefulWidget {
   const AccessPreferencesScreen({super.key, this.editMode = false});
 
   final bool editMode;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final access = ref.watch(accessPreferencesNotifierProvider);
-    final notifier = ref.read(accessPreferencesNotifierProvider.notifier);
-    final readAloud = ref.read(readAloudProvider);
+  ConsumerState<AccessPreferencesScreen> createState() =>
+      _AccessPreferencesScreenState();
+}
 
+class _AccessPreferencesScreenState
+    extends ConsumerState<AccessPreferencesScreen> {
+  @override
+  void initState() {
+    super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
       if (access.readAloud) {
-        readAloud(AppStrings.accessPreferencesHeading);
+        ref.read(readAloudProvider)(AppStrings.accessPreferencesHeading);
       }
     });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final access = ref.watch(accessPreferencesNotifierProvider);
+    final notifier = ref.read(accessPreferencesNotifierProvider.notifier);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -169,7 +181,7 @@ class AccessPreferencesScreen extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () {
-                  if (editMode) {
+                  if (widget.editMode) {
                     context.pop();
                   } else {
                     context.pushNamed(RouteNames.contact);

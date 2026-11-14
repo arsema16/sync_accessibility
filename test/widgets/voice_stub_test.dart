@@ -8,16 +8,16 @@ import 'package:sync_accessibility/core/providers/app_providers.dart';
 import 'package:sync_accessibility/shared/widgets/form_step.dart';
 import 'package:sync_accessibility/shared/widgets/question_screen.dart';
 
-// Covers the review finding "Behavioral paths untested" for the voice input
-// stub. The injected VoiceInputCallback stub returns an empty string; the form
-// engine must surface the typed-fallback hint and always keep the typed field.
+// Covers the voice input stub behaviour on the voice form step.
+// The injected VoiceInputCallback returns an empty string; the form engine
+// must surface the typed-fallback hint. The typed TextField is hidden until
+// the user taps "Type instead" (design change: mic-first, type on demand).
 void main() {
   testWidgets('voice stub returns empty and shows the typed-fallback hint',
       (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
 
-    // Override voiceInputProvider with a stub that always returns empty string.
     Future<String> emptyVoice() async => '';
 
     await tester.pumpWidget(
@@ -42,16 +42,19 @@ void main() {
       ),
     );
 
-    // Typed fallback is always present, regardless of the voice slot.
+    // TextField is hidden by default; "Type instead" reveals it.
+    expect(find.byType(TextField), findsNothing);
+
+    // Tap "Type instead" — the TextField should appear.
+    await tester.tap(find.text('Type instead'));
+    await tester.pumpAndSettle();
     expect(find.byType(TextField), findsOneWidget);
 
-    final micButton = find.ancestor(
-      of: find.byIcon(Icons.mic_none),
-      matching: find.byType(FilledButton),
-    );
-    expect(micButton, findsOneWidget);
+    // Mic icon is present (inside SyncVoiceMicButton via GestureDetector).
+    expect(find.byIcon(Icons.mic_none), findsOneWidget);
 
-    await tester.tap(micButton);
+    // Tap the mic button (GestureDetector wraps the mic button).
+    await tester.tap(find.byIcon(Icons.mic_none));
     await tester.pumpAndSettle();
 
     // The stub returned empty, so the plain-language fallback hint is shown.

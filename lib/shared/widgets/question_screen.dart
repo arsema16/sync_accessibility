@@ -450,22 +450,13 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
-        // Centered mic button — wrapped in FilledButton for semantic/test
-        // compatibility; inner SyncVoiceMicButton provides the visual design.
+        // Centered mic button — SyncVoiceMicButton handles its own tap via
+        // GestureDetector; it has explicit 120×120 dimensions so layout is
+        // always defined before any hit-test runs.
         Center(
-          child: FilledButton(
-            style: FilledButton.styleFrom(
-              padding: EdgeInsets.zero,
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              overlayColor: Colors.transparent,
-              shape: const CircleBorder(),
-            ),
-            onPressed: _isListening ? null : _startVoice,
-            child: SyncVoiceMicButton(
-              isListening: _isListening,
-              onTap: null, // handled by FilledButton
-            ),
+          child: SyncVoiceMicButton(
+            isListening: _isListening,
+            onTap: _isListening ? null : _startVoice,
           ),
         ),
         if (_isListening) ...[
@@ -498,20 +489,22 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        // TextField always present (required by voice_stub_test)
-        TextField(
-          controller: _textController,
-          focusNode: _focusNode,
-          keyboardType: _step.keyboardType ?? TextInputType.text,
-          textInputAction: TextInputAction.next,
-          minLines: 1,
-          maxLines: 3,
-          decoration: InputDecoration(
-            labelText: _step.title,
-            hintText: _step.hint,
+        // TextField shown only after "Type instead" is tapped
+        if (_showTextField) ...[
+          TextField(
+            controller: _textController,
+            focusNode: _focusNode,
+            keyboardType: _step.keyboardType ?? TextInputType.text,
+            textInputAction: TextInputAction.next,
+            minLines: 1,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: _step.title,
+              hintText: _step.hint,
+            ),
+            onSubmitted: (_) => _advance(),
           ),
-          onSubmitted: (_) => _advance(),
-        ),
+        ],
         if (_showVoiceHint) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(AppStrings.voiceUnavailable, style: theme.textTheme.bodySmall),
