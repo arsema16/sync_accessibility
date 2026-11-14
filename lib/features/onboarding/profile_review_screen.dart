@@ -21,49 +21,6 @@ String _identityLabel(IdentityRoute route) {
   }
 }
 
-String _educationLabel(EducationLevel level) {
-  switch (level) {
-    case EducationLevel.primary:
-      return AppStrings.educationPrimary;
-    case EducationLevel.secondary:
-      return AppStrings.educationSecondary;
-    case EducationLevel.vocational:
-      return AppStrings.educationVocational;
-    case EducationLevel.university:
-      return AppStrings.educationUniversity;
-    case EducationLevel.noneOrOther:
-      return AppStrings.educationNoneOrOther;
-  }
-}
-
-List<String> _accessSummary(AccessPassport a) {
-  final list = <String>[];
-  switch (a.answerMode) {
-    case AnswerMode.voice:
-      list.add(AppStrings.answerVoice);
-    case AnswerMode.typed:
-      list.add(AppStrings.answerTyped);
-    case AnswerMode.either:
-      list.add(AppStrings.answerEither);
-  }
-  if (a.readAloud) {
-    list.add(AppStrings.readAloudPref);
-  }
-  if (a.simplerWording) {
-    list.add(AppStrings.simplerWording);
-  }
-  if (a.largerText) {
-    list.add(AppStrings.largerText);
-  }
-  if (a.strongerContrast) {
-    list.add(AppStrings.strongerContrast);
-  }
-  if (a.extraTime) {
-    list.add(AppStrings.extraTime);
-  }
-  return list;
-}
-
 List<String> _supportSummary(PrivateSupport? s) {
   if (s == null) {
     return const <String>[];
@@ -87,10 +44,6 @@ List<String> _supportSummary(PrivateSupport? s) {
 /// Shows everything the user entered, grouped by section, with an Edit link per
 /// section. "Save profile" persists via the profile service stub and shows a
 /// completion state.
-///
-/// Edit links [push] the section with `extra: true` so the section opens in
-/// edit mode and returns to this review screen after one screen, instead of
-/// replacing the stack and re-walking the downstream flow.
 class ProfileReviewScreen extends ConsumerStatefulWidget {
   const ProfileReviewScreen({super.key});
 
@@ -102,6 +55,8 @@ class ProfileReviewScreen extends ConsumerStatefulWidget {
 class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
   bool _saving = false;
   bool _saved = false;
+
+  static const Color _teal = Color(0xFF1B7A6E);
 
   Future<void> _saveProfile() async {
     setState(() => _saving = true);
@@ -120,120 +75,145 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     if (_saved) {
-      return _buildCompletion(context, theme);
+      return _buildCompletion(context);
     }
 
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final draft = ref.watch(onboardingDraftProvider);
-    final access = ref.watch(accessPreferencesNotifierProvider);
     final contact = draft.contact;
-    final skills = draft.skills;
     final support = draft.privateSupport;
 
-    final accessItems = _accessSummary(access);
     final supportItems = _supportSummary(support);
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.profileReviewHeading)),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
+          tooltip: AppStrings.goBack,
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
+            // Progress bar: 5 of 5 (100%)
+            Column(
+              children: [
+                LinearProgressIndicator(
+                  value: 1.0,
+                  minHeight: 6,
+                  backgroundColor: const Color(0xFFE0E0E0),
+                  valueColor: const AlwaysStoppedAnimation<Color>(_teal),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.sm,
+                    AppSpacing.pagePadding,
+                    AppSpacing.xs,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '5 of 5',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.pagePadding,
+                  vertical: AppSpacing.sm,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(AppStrings.profileReviewHint, style: theme.textTheme.bodyLarge),
-                    const SizedBox(height: AppSpacing.lg),
-                    _ReviewSection(
+                    const Text(
+                      'Review Your Application',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Text(
+                      'Please check your information before submitting.',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color(0xFF757575),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _InfoRow(
+                      icon: Icons.person,
                       title: AppStrings.sectionName,
+                      value: _valueOrPlaceholder(contact.fullName),
                       onEdit: () =>
                           context.pushNamed(RouteNames.contact, extra: true),
-                      children: [
-                        _valueOrPlaceholder(contact.fullName),
-                      ],
                     ),
-                    _ReviewSection(
+                    _InfoRow(
+                      icon: Icons.email,
                       title: AppStrings.sectionContact,
+                      value: _valueOrPlaceholder(
+                        [
+                          if (contact.phone.isNotEmpty) contact.phone,
+                          if (contact.email != null && contact.email!.isNotEmpty)
+                            contact.email!,
+                        ].join(' · '),
+                        fallback: AppStrings.notProvided,
+                      ),
                       onEdit: () =>
                           context.pushNamed(RouteNames.contact, extra: true),
-                      children: [
-                        _valueOrPlaceholder(contact.phone, fallback: AppStrings.notProvided),
-                        if (contact.email != null && contact.email!.isNotEmpty)
-                          _valueOrPlaceholder(contact.email!),
-                      ],
                     ),
-                    _ReviewSection(
+                    _InfoRow(
+                      icon: Icons.work,
                       title: AppStrings.sectionIdentity,
+                      value: _valueOrPlaceholder(
+                        draft.identityRoute == null
+                            ? AppStrings.notProvided
+                            : _identityLabel(draft.identityRoute!),
+                      ),
                       onEdit: () =>
                           context.pushNamed(RouteNames.identity, extra: true),
-                      children: [
-                        _valueOrPlaceholder(
-                          draft.identityRoute == null
-                              ? AppStrings.notProvided
-                              : _identityLabel(draft.identityRoute!),
-                        ),
-                      ],
                     ),
-                    _ReviewSection(
-                      title: AppStrings.sectionSkills,
-                      onEdit: () =>
-                          context.pushNamed(RouteNames.skills, extra: true),
-                      children: [
-                        _valueOrPlaceholder(skills.occupation, fallback: AppStrings.notProvided),
-                        const SizedBox(height: AppSpacing.xs),
-                        _valueOrPlaceholder(_educationLabel(skills.educationLevel)),
-                      ],
-                    ),
-                    _ReviewSection(
-                      title: AppStrings.sectionLanguages,
-                      onEdit: () =>
-                          context.pushNamed(RouteNames.skills, extra: true),
-                      children: [
-                        _valueOrPlaceholder(
-                          skills.languages.isEmpty
-                              ? AppStrings.notProvided
-                              : skills.languages.join(', '),
-                        ),
-                      ],
-                    ),
-                    _ReviewSection(
-                      title: AppStrings.sectionAccessPreferences,
-                      onEdit: () => context.pushNamed(RouteNames.accessPreferences,
-                          extra: true),
-                      children: [
-                        for (final item in accessItems)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                            child: Text(item, style: theme.textTheme.bodyLarge),
-                          ),
-                      ],
-                    ),
-                    _ReviewSection(
+                    _InfoRow(
+                      icon: Icons.favorite_border,
                       title: AppStrings.sectionSupport,
+                      value: supportItems.isEmpty
+                          ? AppStrings.notProvided
+                          : supportItems.join(', '),
                       onEdit: () =>
                           context.pushNamed(RouteNames.support, extra: true),
-                      children: [
-                        if (supportItems.isEmpty)
-                          _valueOrPlaceholder(AppStrings.notProvided)
-                        else
-                          for (final item in supportItems)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                              child: Text(item, style: theme.textTheme.bodyLarge),
-                            ),
-                      ],
                     ),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.pagePadding),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                0,
+                AppSpacing.pagePadding,
+                AppSpacing.sm,
+              ),
               child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _teal,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                  ),
+                ),
                 onPressed: _saving ? null : _saveProfile,
                 child: _saving
                     ? Semantics(
@@ -247,7 +227,7 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: theme.colorScheme.primary,
+                                      color: Colors.white,
                                       width: 2,
                                     ),
                                   ),
@@ -256,10 +236,36 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                             : const SizedBox(
                                 height: 24,
                                 width: 24,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               ),
                       )
-                    : const Text(AppStrings.saveProfile),
+                    : const Text(
+                        'Submit Application →',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                0,
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+              ),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
+                  foregroundColor: _teal,
+                  side: const BorderSide(color: _teal),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(50)),
+                  ),
+                ),
+                onPressed: () {},
+                child: const Text('Edit Information'),
               ),
             ),
           ],
@@ -268,42 +274,114 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
     );
   }
 
-  Widget _buildCompletion(BuildContext context, ThemeData theme) {
+  Widget _buildCompletion(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.profileReviewHeading)),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.pagePadding),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 64,
-                  color: theme.colorScheme.primary,
+                const SizedBox(height: AppSpacing.xxl),
+                // Confetti dots + check circle
+                Center(
+                  child: SizedBox(
+                    width: 180,
+                    height: 180,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Scatter colored dots
+                        ..._confettiDots(),
+                        // Large teal circle with check
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: const BoxDecoration(
+                            color: _teal,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 56,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
                 Semantics(
                   header: true,
                   liveRegion: true,
-                  child: Text(
-                    AppStrings.profileSavedTitle,
+                  child: const Text(
+                    'Application Submitted!',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Text(
-                  AppStrings.profileSavedBody,
+                const Text(
+                  "You'll be notified about the status of your application soon.",
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge,
+                  style: TextStyle(fontSize: 15, color: Color(0xFF757575)),
                 ),
-                const SizedBox(height: AppSpacing.xxl),
+                const SizedBox(height: AppSpacing.xl),
+                // Yellow banner
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Icon(Icons.star, color: Colors.amber, size: 20),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Thank you for being part of a more inclusive workforce.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF5D4037),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
                 FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _teal,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(50)),
+                    ),
+                  ),
                   onPressed: () => context.pushNamed(RouteNames.jobs),
-                  child: const Text(AppStrings.exploreJobs),
+                  child: const Text(
+                    'Back to Jobs',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('View My Applications'),
                 ),
               ],
             ),
@@ -313,63 +391,124 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
     );
   }
 
-  Widget _valueOrPlaceholder(String value, {String? fallback}) {
-    final theme = Theme.of(context);
+  List<Widget> _confettiDots() {
+    const dots = [
+      _DotSpec(dx: -70, dy: -50, color: Colors.amber),
+      _DotSpec(dx: 70, dy: -50, color: Colors.pink),
+      _DotSpec(dx: -60, dy: 60, color: Colors.blue),
+      _DotSpec(dx: 60, dy: 60, color: Colors.green),
+      _DotSpec(dx: 0, dy: -75, color: Colors.orange),
+      _DotSpec(dx: -80, dy: 0, color: Colors.purple),
+      _DotSpec(dx: 80, dy: 0, color: Colors.red),
+      _DotSpec(dx: 0, dy: 75, color: Colors.teal),
+    ];
+    return dots
+        .map(
+          (d) => Positioned(
+            left: 90 + d.dx - 4,
+            top: 90 + d.dy - 4,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: d.color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  String _valueOrPlaceholder(String value, {String? fallback}) {
     final isEmpty = value.trim().isEmpty;
-    final display = isEmpty ? (fallback ?? AppStrings.notProvided) : value;
-    final isPlaceholder = isEmpty || value == AppStrings.notProvided;
-    return Text(
-      display,
-      style: isPlaceholder
-          ? theme.textTheme.bodyMedium!.copyWith(color: theme.colorScheme.onSurfaceVariant)
-          : theme.textTheme.bodyLarge,
-    );
+    return isEmpty ? (fallback ?? AppStrings.notProvided) : value;
   }
 }
 
-class _ReviewSection extends StatelessWidget {
-  const _ReviewSection({
+@immutable
+class _DotSpec {
+  const _DotSpec({required this.dx, required this.dy, required this.color});
+  final double dx;
+  final double dy;
+  final Color color;
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
     required this.title,
+    required this.value,
     required this.onEdit,
-    required this.children,
   });
 
+  final IconData icon;
   final String title;
+  final String value;
   final VoidCallback onEdit;
-  final List<Widget> children;
+
+  static const Color _teal = Color(0xFF1B7A6E);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(color: Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Semantics(
-                      header: true,
-                      child: Text(title, style: theme.textTheme.titleLarge),
-                    ),
-                  ),
-                  Semantics(
-                    label: AppStrings.edit,
-                    hint: AppStrings.editSectionHint(title),
-                    button: true,
-                    child: TextButton(
-                      onPressed: onEdit,
-                      child: Text(AppStrings.edit),
-                    ),
-                  ),
-                ],
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: _teal,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ...children,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF757575),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Semantics(
+                label: AppStrings.edit,
+                hint: AppStrings.editSectionHint(title),
+                button: true,
+                child: TextButton(
+                  onPressed: onEdit,
+                  child: const Text(
+                    AppStrings.edit,
+                    style: TextStyle(color: _teal),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

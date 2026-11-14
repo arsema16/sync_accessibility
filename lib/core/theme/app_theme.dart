@@ -111,7 +111,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: scheme.surface,
+      scaffoldBackgroundColor: isLight ? Colors.white : scheme.surface,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       textTheme: _textTheme(scheme),
       appBarTheme: AppBarTheme(
@@ -133,7 +133,7 @@ class AppTheme {
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderRadius: BorderRadius.all(Radius.circular(50)),
           ),
         ),
       ),
@@ -148,7 +148,7 @@ class AppTheme {
           backgroundColor: scheme.secondaryContainer,
           foregroundColor: scheme.onSecondaryContainer,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderRadius: BorderRadius.all(Radius.circular(50)),
           ),
         ),
       ),
@@ -162,7 +162,7 @@ class AppTheme {
           textStyle: AppTextStyles.labelLarge,
           foregroundColor: scheme.primary,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderRadius: BorderRadius.all(Radius.circular(50)),
           ),
         ),
       ),

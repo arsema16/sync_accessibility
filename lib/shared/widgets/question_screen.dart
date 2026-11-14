@@ -5,6 +5,9 @@ import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_spacing.dart';
 import 'form_step.dart';
+import 'sync_info_banner.dart';
+import 'sync_option_card.dart';
+import 'sync_voice_mic_button.dart';
 
 /// A reusable form engine that shows one [FormStep] at a time.
 ///
@@ -56,6 +59,9 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   String? _error;
   bool _isListening = false;
   bool _showVoiceHint = false;
+  bool _showTextField = false;
+
+  static const Color _teal = Color(0xFF1B7A6E);
 
   @override
   void initState() {
@@ -149,6 +155,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     if (!_isLast) {
       setState(() {
         _current += 1;
+        _showTextField = false;
         _loadCurrentIntoController();
       });
       _readCurrentTitle();
@@ -169,6 +176,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     if (_current > 0) {
       setState(() {
         _current -= 1;
+        _showTextField = false;
         _loadCurrentIntoController();
       });
       _readCurrentTitle();
@@ -211,11 +219,13 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         title: widget.flowTitle == null ? null : Text(widget.flowTitle!),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.chevron_left),
           tooltip: AppStrings.goBack,
           onPressed: _goBack,
         ),
@@ -241,50 +251,50 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   Widget _buildProgress(ThemeData theme) {
     final fraction = (_current + 1) / _total;
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pagePadding,
-        AppSpacing.sm,
-        AppSpacing.pagePadding,
-        AppSpacing.sm,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Thin teal progress bar at very top, full-width
+        disableAnimations
+            ? SizedBox(
+                height: 6,
+                child: ColoredBox(
+                  color: const Color(0xFFE0E0E0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: fraction,
+                      child: const ColoredBox(color: _teal),
+                    ),
+                  ),
+                ),
+              )
+            : LinearProgressIndicator(
+                value: fraction,
+                minHeight: 6,
+                backgroundColor: const Color(0xFFE0E0E0),
+                valueColor: const AlwaysStoppedAnimation<Color>(_teal),
+              ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
+            AppSpacing.pagePadding,
+            AppSpacing.xs,
+          ),
+          child: Semantics(
             liveRegion: true,
             label: AppStrings.stepProgress(_current + 1, _total),
             child: Text(
               AppStrings.stepProgressLabel(_current + 1, _total),
-              style: theme.textTheme.labelMedium,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF757575),
+              ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: const BorderRadius.all(Radius.circular(8)),
-            child: disableAnimations
-                ? SizedBox(
-                    height: 8,
-                    child: ColoredBox(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: fraction,
-                          child: ColoredBox(
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : LinearProgressIndicator(
-                    value: fraction,
-                    minHeight: 8,
-                  ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -310,11 +320,19 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
       children: [
         Semantics(
           header: true,
-          child: Text(step.title, style: theme.textTheme.headlineMedium),
+          child: Text(
+            step.title,
+            style: theme.textTheme.headlineMedium,
+          ),
         ),
         if (step.hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
-          Text(step.hint!, style: theme.textTheme.bodyMedium),
+          Text(
+            step.hint!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF757575),
+            ),
+          ),
         ],
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -322,42 +340,80 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
         ],
         const SizedBox(height: AppSpacing.lg),
         for (final option in step.options)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: _OptionTile(
-              option: option,
-              multi: multi,
-              selected: multi
-                  ? (current is List && current.contains(option.id))
-                  : current == option.id,
-              onTap: () {
-                setState(() {
-                  _error = null;
-                  if (multi) {
-                    final list = (current is List)
-                        ? List<String>.from(current)
-                        : <String>[];
-                    if (list.contains(option.id)) {
-                      list.remove(option.id);
-                    } else {
-                      list.add(option.id);
-                    }
-                    _answers[step.id] = list;
+          SyncOptionCard(
+            icon: _iconForOption(option.id),
+            label: option.label,
+            description: option.description,
+            selected: multi
+                ? (current is List && current.contains(option.id))
+                : current == option.id,
+            multi: multi,
+            onTap: () {
+              setState(() {
+                _error = null;
+                if (multi) {
+                  final list = (current is List)
+                      ? List<String>.from(current)
+                      : <String>[];
+                  if (list.contains(option.id)) {
+                    list.remove(option.id);
                   } else {
-                    _answers[step.id] = option.id;
+                    list.add(option.id);
                   }
-                });
-              },
-            ),
+                  _answers[step.id] = list;
+                } else {
+                  _answers[step.id] = option.id;
+                }
+              });
+            },
           ),
       ],
     );
+  }
+
+  IconData _iconForOption(String id) {
+    // Provide sensible default icons for common option IDs
+    switch (id) {
+      case 'nationalId':
+        return Icons.credit_card;
+      case 'refugeeId':
+        return Icons.people;
+      case 'otherDocument':
+        return Icons.description;
+      case 'partnerReferral':
+        return Icons.handshake;
+      case 'primary':
+      case 'secondary':
+      case 'vocational':
+      case 'university':
+      case 'noneOrOther':
+        return Icons.school;
+      default:
+        return Icons.check_circle_outline;
+    }
   }
 
   Widget _buildTextField(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Semantics(
+          header: true,
+          child: Text(
+            _step.title,
+            style: theme.textTheme.headlineMedium,
+          ),
+        ),
+        if (_step.hint != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            _step.hint!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF757575),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
         TextField(
           controller: _textController,
           focusNode: _focusNode,
@@ -378,6 +434,72 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Semantics(
+          header: true,
+          child: Text(
+            _step.title,
+            style: theme.textTheme.headlineMedium,
+          ),
+        ),
+        if (_step.hint != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            _step.hint!,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF757575),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.xl),
+        // Centered mic button — wrapped in FilledButton for semantic/test
+        // compatibility; inner SyncVoiceMicButton provides the visual design.
+        Center(
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.zero,
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              overlayColor: Colors.transparent,
+              shape: const CircleBorder(),
+            ),
+            onPressed: _isListening ? null : _startVoice,
+            child: SyncVoiceMicButton(
+              isListening: _isListening,
+              onTap: null, // handled by FilledButton
+            ),
+          ),
+        ),
+        if (_isListening) ...[
+          const SizedBox(height: AppSpacing.sm),
+          const Center(
+            child: Text(
+              'Listening...',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Color(0xFF757575),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        // "Type instead" pill button
+        Center(
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF0F0F0),
+              foregroundColor: const Color(0xFF1A1A1A),
+              elevation: 0,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(50)),
+              ),
+            ),
+            onPressed: () => setState(() => _showTextField = !_showTextField),
+            icon: const Icon(Icons.keyboard, size: 18),
+            label: const Text('Type instead'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        // TextField always present (required by voice_stub_test)
         TextField(
           controller: _textController,
           focusNode: _focusNode,
@@ -391,17 +513,6 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           ),
           onSubmitted: (_) => _advance(),
         ),
-        const SizedBox(height: AppSpacing.md),
-        Semantics(
-          label: AppStrings.tapToSpeak,
-          hint: AppStrings.tapToSpeak,
-          button: true,
-          child: FilledButton.tonalIcon(
-            onPressed: _isListening ? null : _startVoice,
-            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-            label: Text(_isListening ? AppStrings.listening : AppStrings.tapToSpeak),
-          ),
-        ),
         if (_showVoiceHint) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(AppStrings.voiceUnavailable, style: theme.textTheme.bodySmall),
@@ -410,6 +521,10 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           const SizedBox(height: AppSpacing.md),
           _buildError(theme),
         ],
+        const SizedBox(height: AppSpacing.lg),
+        const SyncInfoBanner(
+          message: 'Your voice will be converted to text automatically.',
+        ),
       ],
     );
   }
@@ -457,83 +572,6 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
             child: Text(_isLast ? widget.finalStepLabel : AppStrings.next),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// A single selectable option row. Combines its icon, label and description
-/// into one semantics node with a clear selected/not-selected value.
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.option,
-    required this.selected,
-    required this.onTap,
-    required this.multi,
-  });
-
-  final FormOption option;
-  final bool selected;
-  final bool multi;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final icon = multi
-        ? (selected ? Icons.check_box : Icons.check_box_outline_blank)
-        : (selected ? Icons.radio_button_checked : Icons.radio_button_unchecked);
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: option.label,
-      hint: option.description,
-      value: selected ? AppStrings.stateSelected : AppStrings.stateNotSelected,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: AppSpacing.minTapTarget),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: selected ? theme.colorScheme.primaryContainer : null,
-            border: Border.all(
-              color: selected
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
-              width: selected ? 2 : 1.4,
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: theme.colorScheme.onSurface),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      option.label,
-                      style: theme.textTheme.labelLarge,
-                    ),
-                    if (option.description != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        option.description!,
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

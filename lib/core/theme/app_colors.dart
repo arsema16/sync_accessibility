@@ -15,15 +15,15 @@ class AppColors {
   AppColors._();
 
   // ---- Brand (light) ----
-  static const Color primary = Color(0xFF0B4F9C);
+  static const Color primary = Color(0xFF1B7A6E);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color primaryContainer = Color(0xFFD7E3FF);
-  static const Color onPrimaryContainer = Color(0xFF001A41);
+  static const Color primaryContainer = Color(0xFFB2DFDB);  // light teal
+  static const Color onPrimaryContainer = Color(0xFF004D44);
 
-  static const Color secondary = Color(0xFF1F6FEB);
+  static const Color secondary = Color(0xFF26A69A);          // lighter teal
   static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color secondaryContainer = Color(0xFFD6E4FF);
-  static const Color onSecondaryContainer = Color(0xFF0A1F44);
+  static const Color secondaryContainer = Color(0xFFE0F2F1);
+  static const Color onSecondaryContainer = Color(0xFF00332E);
 
   // ---- Surfaces (light) ----
   static const Color surface = Color(0xFFFDFCFF);
@@ -71,7 +71,7 @@ class AppColors {
   // ---- High-contrast overrides ----
   // Used by the stronger-contrast access preference. Pure black/white pairs
   // for body text exceed 20:1.
-  static const Color primaryHighContrast = Color(0xFF003B73);
+  static const Color primaryHighContrast = Color(0xFF0D4F47);
   static const Color onPrimaryHighContrast = Color(0xFFFFFFFF);
   static const Color surfaceHighContrast = Color(0xFFFFFFFF);
   static const Color onSurfaceHighContrast = Color(0xFF000000);
@@ -80,7 +80,7 @@ class AppColors {
   static const Color outlineHighContrast = Color(0xFF333333);
   static const Color errorHighContrast = Color(0xFF7A0E0A);
 
-  static const Color primaryDarkHighContrast = Color(0xFFD7E3FF);
+  static const Color primaryDarkHighContrast = Color(0xFFB2DFDB);
   static const Color onPrimaryDarkHighContrast = Color(0xFF000000);
   static const Color surfaceDarkHighContrast = Color(0xFF000000);
   static const Color onSurfaceDarkHighContrast = Color(0xFFFFFFFF);
