@@ -119,7 +119,12 @@ class OnboardingDraftNotifier extends Notifier<ApplicantProfile> {
   void setSkills(SkillsInfo skills) => _persist(state.copyWith(skills: skills));
   void setPrivateSupport(PrivateSupport? support) =>
       _persist(state.copyWith(privateSupport: support));
-  void reset() => _persist(ApplicantProfile.empty());
+  void reset() {
+    // Reset in-memory state only. Do not write to disk — there is no resume
+    // path from WelcomeScreen, so persisting an empty draft would silently
+    // discard any partially-completed session stored from a previous run.
+    state = ApplicantProfile.empty();
+  }
 
   void _persist(ApplicantProfile next) {
     state = next;

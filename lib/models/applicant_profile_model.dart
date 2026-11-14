@@ -278,6 +278,15 @@ class ApplicantProfile extends Equatable {
         accessPassport: AccessPassport.empty(),
       );
 
+  // Sentinel used by [copyWith] to distinguish "caller passed null to clear
+  // privateSupport" from "caller did not pass privateSupport at all".
+  static const Object _unset = Object();
+
+  /// Returns a copy with the supplied fields replaced.
+  ///
+  /// Pass `privateSupport: null` explicitly to *clear* the field (e.g. when
+  /// the user taps "Skip this step" on the Support Preferences screen). Omit
+  /// the parameter entirely to leave the existing value unchanged.
   ApplicantProfile copyWith({
     String? id,
     String? userId,
@@ -285,7 +294,7 @@ class ApplicantProfile extends Equatable {
     IdentityRoute? identityRoute,
     SkillsInfo? skills,
     AccessPassport? accessPassport,
-    PrivateSupport? privateSupport,
+    Object? privateSupport = _unset,
     DateTime? updatedAt,
   }) =>
       ApplicantProfile(
@@ -295,7 +304,9 @@ class ApplicantProfile extends Equatable {
         identityRoute: identityRoute ?? this.identityRoute,
         skills: skills ?? this.skills,
         accessPassport: accessPassport ?? this.accessPassport,
-        privateSupport: privateSupport ?? this.privateSupport,
+        privateSupport: identical(privateSupport, _unset)
+            ? this.privateSupport
+            : privateSupport as PrivateSupport?,
         updatedAt: updatedAt ?? this.updatedAt,
       );
 

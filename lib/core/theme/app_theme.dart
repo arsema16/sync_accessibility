@@ -79,7 +79,7 @@ class AppTheme {
           error: AppColors.errorHighContrast,
           onError: AppColors.onPrimaryHighContrast,
           errorContainer: AppColors.errorContainer,
-          onErrorContainer: AppColors.onPrimaryHighContrast,
+          onErrorContainer: AppColors.onErrorContainer,
         ),
         Brightness.light,
       );
