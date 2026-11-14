@@ -35,6 +35,18 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Declarative routing for the onboarding + stub job flow.
+  go_router: ^14.6.2
+
+  # State management for the onboarding draft and access preferences.
+  flutter_riverpod: ^2.6.1
+
+  # Value equality for the data models.
+  equatable: ^2.0.7
+
+  # Persist access preferences locally between sessions.
+  shared_preferences: ^2.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
