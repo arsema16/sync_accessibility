@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/applicant_profile_model.dart';
 import '../../../shared/widgets/sync_option_card.dart';
@@ -20,8 +21,6 @@ class AccessPreferencesScreen extends ConsumerWidget {
   const AccessPreferencesScreen({super.key, this.editMode = false});
 
   final bool editMode;
-
-  static const Color _teal = Color(0xFF1B7A6E);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -127,9 +126,9 @@ class AccessPreferencesScreen extends ConsumerWidget {
                       ),
                     ),
                     SyncOptionCard(
-                      icon: Icons.grid_on,
-                      label: 'Braille Support',
-                      description: 'Read questions and instructions aloud',
+                      icon: Icons.volume_up,
+                      label: 'Read Aloud',
+                      description: AppStrings.readAloudPref,
                       selected: access.readAloud,
                       onTap: () => notifier.setReadAloud(!access.readAloud),
                     ),
@@ -162,7 +161,7 @@ class AccessPreferencesScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.pagePadding),
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: _teal,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
                   shape: const RoundedRectangleBorder(

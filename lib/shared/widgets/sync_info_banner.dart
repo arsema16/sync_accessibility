@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 /// Light teal informational or privacy banner.
 class SyncInfoBanner extends StatelessWidget {
   const SyncInfoBanner({
@@ -19,20 +21,20 @@ class SyncInfoBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFE0F2F1),
+          color: AppColors.secondaryContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: const Color(0xFF1B7A6E), size: 20),
+            Icon(icon, color: AppColors.primary, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 message,
                 style: const TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF004D44),
+                  color: AppColors.onPrimaryContainer,
                 ),
               ),
             ),

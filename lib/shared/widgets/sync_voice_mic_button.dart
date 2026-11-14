@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 /// Large circular microphone button used on voice-input onboarding steps.
 class SyncVoiceMicButton extends StatelessWidget {
   const SyncVoiceMicButton({
@@ -10,9 +12,6 @@ class SyncVoiceMicButton extends StatelessWidget {
 
   final bool isListening;
   final VoidCallback? onTap;
-
-  static const Color _teal = Color(0xFF1B7A6E);
-  static const Color _tealLight = Color(0xFFB2DFDB);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +24,7 @@ class SyncVoiceMicButton extends StatelessWidget {
           width: 120,
           height: 120,
           decoration: const BoxDecoration(
-            color: _tealLight,
+            color: AppColors.primaryContainer,
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -33,7 +32,7 @@ class SyncVoiceMicButton extends StatelessWidget {
               width: 88,
               height: 88,
               decoration: const BoxDecoration(
-                color: _teal,
+                color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
               child: Icon(

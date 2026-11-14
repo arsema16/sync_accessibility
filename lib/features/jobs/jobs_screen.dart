@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
 /// Job listings screen with teal header, search, filters, and sample job cards.
@@ -13,8 +14,6 @@ class JobsScreen extends StatefulWidget {
 class _JobsScreenState extends State<JobsScreen> {
   int _selectedFilter = 0;
   int _selectedNav = 0;
-
-  static const Color _teal = Color(0xFF1B7A6E);
 
   static const _filters = ['All', 'Remote', 'Step-free', 'With Support'];
 
@@ -65,15 +64,14 @@ class _JobsScreenState extends State<JobsScreen> {
                 vertical: AppSpacing.sm,
               ),
               itemCount: _jobs.length,
-              itemBuilder: (context, index) =>
-                  _JobCard(job: _jobs[index], teal: _teal),
+              itemBuilder: (context, index) => _JobCard(job: _jobs[index]),
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedNav,
-        selectedItemColor: _teal,
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: const Color(0xFF9E9E9E),
         onTap: (i) => setState(() => _selectedNav = i),
         items: const [
@@ -100,7 +98,7 @@ class _JobsScreenState extends State<JobsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      color: _teal,
+      color: AppColors.primary,
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + AppSpacing.md,
         left: AppSpacing.pagePadding,
@@ -163,7 +161,7 @@ class _JobsScreenState extends State<JobsScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
-            borderSide: const BorderSide(color: _teal, width: 2),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
         ),
       ),
@@ -189,10 +187,10 @@ class _JobsScreenState extends State<JobsScreen> {
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: selected ? _teal : Colors.white,
+                color: selected ? AppColors.primary : Colors.white,
                 borderRadius: BorderRadius.circular(50),
                 border: Border.all(
-                  color: selected ? _teal : const Color(0xFFE0E0E0),
+                  color: selected ? AppColors.primary : const Color(0xFFE0E0E0),
                 ),
               ),
               child: Text(
@@ -227,10 +225,9 @@ class _JobData {
 }
 
 class _JobCard extends StatelessWidget {
-  const _JobCard({required this.job, required this.teal});
+  const _JobCard({required this.job});
 
   final _JobData job;
-  final Color teal;
 
   @override
   Widget build(BuildContext context) {
@@ -249,9 +246,9 @@ class _JobCard extends StatelessWidget {
           Container(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
-              color: teal,
-              borderRadius: BorderRadius.circular(12),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             child: const Icon(Icons.work, color: Colors.white, size: 24),
           ),
@@ -280,21 +277,24 @@ class _JobCard extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   runSpacing: 4,
-                  children: job.tags.map((tag) => _TagChip(label: tag, teal: teal)).toList(),
+                  children:
+                      job.tags.map((tag) => _TagChip(label: tag)).toList(),
                 ),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           // Right: teal circle chevron
-          Container(
+          const SizedBox(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(
-              color: teal,
-              shape: BoxShape.circle,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.chevron_right, color: Colors.white, size: 20),
             ),
-            child: const Icon(Icons.chevron_right, color: Colors.white, size: 20),
           ),
         ],
       ),
@@ -303,10 +303,9 @@ class _JobCard extends StatelessWidget {
 }
 
 class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label, required this.teal});
+  const _TagChip({required this.label});
 
   final String label;
-  final Color teal;
 
   @override
   Widget build(BuildContext context) {
@@ -315,13 +314,13 @@ class _TagChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: teal),
+        border: Border.all(color: AppColors.primary),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11,
-          color: teal,
+          color: AppColors.primary,
           fontWeight: FontWeight.w500,
         ),
       ),

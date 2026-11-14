@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
 /// The SYNC entry point. Two primary actions plus a read-aloud helper.
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
-  static const Color _teal = Color(0xFF1B7A6E);
   static const Color _tealDark = Color(0xFF0D4F47);
 
   @override
@@ -21,12 +21,14 @@ class WelcomeScreen extends ConsumerWidget {
       body: Stack(
         children: [
           // Full-screen gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [_teal, _tealDark],
+          const SizedBox.expand(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primary, _tealDark],
+                ),
               ),
             ),
           ),
@@ -49,18 +51,20 @@ class WelcomeScreen extends ConsumerWidget {
                 children: [
                   const SizedBox(height: AppSpacing.xl),
                   // Logo
-                  Center(
-                    child: Container(
+                  const Center(
+                    child: SizedBox(
                       width: 88,
                       height: 88,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.eco,
-                        size: 48,
-                        color: _teal,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.eco,
+                          size: 48,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -101,7 +105,7 @@ class WelcomeScreen extends ConsumerWidget {
                   FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: _teal,
+                      foregroundColor: AppColors.primary,
                       minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(50)),

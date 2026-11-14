@@ -204,24 +204,33 @@ class PrivateSupport extends Equatable {
     required this.writtenInstructions,
     required this.extraInterviewTime,
     required this.remoteInterview,
+    this.stepFreeLocation = false,
+    this.accessibleTransportation = false,
     this.other,
   });
 
   final bool writtenInstructions;
   final bool extraInterviewTime;
   final bool remoteInterview;
+  final bool stepFreeLocation;
+  final bool accessibleTransportation;
   final String? other;
 
   PrivateSupport copyWith({
     bool? writtenInstructions,
     bool? extraInterviewTime,
     bool? remoteInterview,
+    bool? stepFreeLocation,
+    bool? accessibleTransportation,
     String? other,
   }) =>
       PrivateSupport(
         writtenInstructions: writtenInstructions ?? this.writtenInstructions,
         extraInterviewTime: extraInterviewTime ?? this.extraInterviewTime,
         remoteInterview: remoteInterview ?? this.remoteInterview,
+        stepFreeLocation: stepFreeLocation ?? this.stepFreeLocation,
+        accessibleTransportation:
+            accessibleTransportation ?? this.accessibleTransportation,
         other: other ?? this.other,
       );
 
@@ -230,6 +239,8 @@ class PrivateSupport extends Equatable {
         'writtenInstructions': writtenInstructions,
         'extraInterviewTime': extraInterviewTime,
         'remoteInterview': remoteInterview,
+        'stepFreeLocation': stepFreeLocation,
+        'accessibleTransportation': accessibleTransportation,
         'other': other,
       };
 
@@ -237,6 +248,8 @@ class PrivateSupport extends Equatable {
         writtenInstructions: map['writtenInstructions'] == true,
         extraInterviewTime: map['extraInterviewTime'] == true,
         remoteInterview: map['remoteInterview'] == true,
+        stepFreeLocation: map['stepFreeLocation'] == true,
+        accessibleTransportation: map['accessibleTransportation'] == true,
         other: map['other'] as String?,
       );
 
@@ -245,6 +258,8 @@ class PrivateSupport extends Equatable {
         writtenInstructions,
         extraInterviewTime,
         remoteInterview,
+        stepFreeLocation,
+        accessibleTransportation,
         other,
       ];
 }

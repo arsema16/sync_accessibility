@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/applicant_profile_model.dart';
 
@@ -21,20 +22,31 @@ String _identityLabel(IdentityRoute route) {
   }
 }
 
+String _educationLabel(EducationLevel level) {
+  switch (level) {
+    case EducationLevel.primary:
+      return AppStrings.educationPrimary;
+    case EducationLevel.secondary:
+      return AppStrings.educationSecondary;
+    case EducationLevel.vocational:
+      return AppStrings.educationVocational;
+    case EducationLevel.university:
+      return AppStrings.educationUniversity;
+    case EducationLevel.noneOrOther:
+      return AppStrings.educationNoneOrOther;
+  }
+}
+
 List<String> _supportSummary(PrivateSupport? s) {
   if (s == null) {
     return const <String>[];
   }
   final list = <String>[];
-  if (s.writtenInstructions) {
-    list.add(AppStrings.supportWrittenInstructions);
-  }
-  if (s.extraInterviewTime) {
-    list.add(AppStrings.supportExtraTime);
-  }
-  if (s.remoteInterview) {
-    list.add(AppStrings.supportRemote);
-  }
+  if (s.stepFreeLocation) list.add('Step-free interview location');
+  if (s.writtenInstructions) list.add(AppStrings.supportWrittenInstructions);
+  if (s.extraInterviewTime) list.add(AppStrings.supportExtraTime);
+  if (s.remoteInterview) list.add(AppStrings.supportRemote);
+  if (s.accessibleTransportation) list.add('Accessible transportation');
   if (s.other != null && s.other!.isNotEmpty) {
     list.add(s.other!);
   }
@@ -55,8 +67,6 @@ class ProfileReviewScreen extends ConsumerStatefulWidget {
 class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
   bool _saving = false;
   bool _saved = false;
-
-  static const Color _teal = Color(0xFF1B7A6E);
 
   Future<void> _saveProfile() async {
     setState(() => _saving = true);
@@ -82,6 +92,7 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
     final draft = ref.watch(onboardingDraftProvider);
     final contact = draft.contact;
+    final skills = draft.skills;
     final support = draft.privateSupport;
 
     final supportItems = _supportSummary(support);
@@ -107,7 +118,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                   value: 1.0,
                   minHeight: 6,
                   backgroundColor: const Color(0xFFE0E0E0),
-                  valueColor: const AlwaysStoppedAnimation<Color>(_teal),
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -185,6 +197,29 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                           context.pushNamed(RouteNames.identity, extra: true),
                     ),
                     _InfoRow(
+                      icon: Icons.build_outlined,
+                      title: AppStrings.sectionSkills,
+                      value: _valueOrPlaceholder(
+                        [
+                          if (skills.occupation.isNotEmpty) skills.occupation,
+                          _educationLabel(skills.educationLevel),
+                          if (skills.keySkills.isNotEmpty)
+                            skills.keySkills.join(', '),
+                        ].join(' · '),
+                      ),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.skills, extra: true),
+                    ),
+                    _InfoRow(
+                      icon: Icons.translate,
+                      title: AppStrings.sectionLanguages,
+                      value: skills.languages.isEmpty
+                          ? AppStrings.notProvided
+                          : skills.languages.join(', '),
+                      onEdit: () =>
+                          context.pushNamed(RouteNames.skills, extra: true),
+                    ),
+                    _InfoRow(
                       icon: Icons.favorite_border,
                       title: AppStrings.sectionSupport,
                       value: supportItems.isEmpty
@@ -203,11 +238,11 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                 AppSpacing.pagePadding,
                 0,
                 AppSpacing.pagePadding,
-                AppSpacing.sm,
+                AppSpacing.lg,
               ),
               child: FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: _teal,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
                   shape: const RoundedRectangleBorder(
@@ -248,26 +283,6 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                       ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                0,
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-              ),
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
-                  foregroundColor: _teal,
-                  side: const BorderSide(color: _teal),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(50)),
-                  ),
-                ),
-                onPressed: () {},
-                child: const Text('Edit Information'),
-              ),
-            ),
           ],
         ),
       ),
@@ -300,8 +315,8 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                         Container(
                           width: 100,
                           height: 100,
-                          decoration: const BoxDecoration(
-                            color: _teal,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -365,7 +380,7 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                 const SizedBox(height: AppSpacing.xl),
                 FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: _teal,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
                     shape: const RoundedRectangleBorder(
@@ -377,11 +392,6 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
                     'Back to Jobs',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('View My Applications'),
                 ),
               ],
             ),
@@ -447,8 +457,6 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final VoidCallback onEdit;
 
-  static const Color _teal = Color(0xFF1B7A6E);
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -467,8 +475,8 @@ class _InfoRow extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: _teal,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: Colors.white, size: 20),
@@ -503,9 +511,9 @@ class _InfoRow extends StatelessWidget {
                 button: true,
                 child: TextButton(
                   onPressed: onEdit,
-                  child: const Text(
+                  child: Text(
                     AppStrings.edit,
-                    style: TextStyle(color: _teal),
+                    style: TextStyle(color: AppColors.primary),
                   ),
                 ),
               ),

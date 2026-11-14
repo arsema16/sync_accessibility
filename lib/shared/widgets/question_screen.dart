@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import 'form_step.dart';
 import 'sync_info_banner.dart';
@@ -60,8 +61,6 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   bool _isListening = false;
   bool _showVoiceHint = false;
   bool _showTextField = false;
-
-  static const Color _teal = Color(0xFF1B7A6E);
 
   @override
   void initState() {
@@ -264,7 +263,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
                     alignment: Alignment.centerLeft,
                     child: FractionallySizedBox(
                       widthFactor: fraction,
-                      child: const ColoredBox(color: _teal),
+                      child: const ColoredBox(color: AppColors.primary),
                     ),
                   ),
                 ),
@@ -273,7 +272,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
                 value: fraction,
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE0E0E0),
-                valueColor: const AlwaysStoppedAnimation<Color>(_teal),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
         Padding(
           padding: const EdgeInsets.fromLTRB(

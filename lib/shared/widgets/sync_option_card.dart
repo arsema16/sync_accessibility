@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_colors.dart';
+
 /// Full-width selectable option row used in Accessibility Settings,
 /// identity selection, and support preferences.
 class SyncOptionCard extends StatelessWidget {
@@ -22,8 +24,6 @@ class SyncOptionCard extends StatelessWidget {
   /// true = checkbox style, false = radio style
   final bool multi;
 
-  static const Color _teal = Color(0xFF1B7A6E);
-
   @override
   Widget build(BuildContext context) {
     return Semantics(
@@ -42,7 +42,7 @@ class SyncOptionCard extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected ? _teal : const Color(0xFFE0E0E0),
+              color: selected ? AppColors.primary : const Color(0xFFE0E0E0),
               width: selected ? 2 : 1,
             ),
           ),
@@ -52,7 +52,7 @@ class SyncOptionCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: const BoxDecoration(
-                  color: _teal,
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: Colors.white, size: 22),
@@ -97,7 +97,6 @@ class _SelectionIndicator extends StatelessWidget {
   const _SelectionIndicator({required this.selected, required this.multi});
   final bool selected;
   final bool multi;
-  static const Color _teal = Color(0xFF1B7A6E);
 
   @override
   Widget build(BuildContext context) {
@@ -107,10 +106,10 @@ class _SelectionIndicator extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: selected ? _teal : Colors.transparent,
+          color: selected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: selected ? _teal : const Color(0xFFBDBDBD),
+            color: selected ? AppColors.primary : const Color(0xFFBDBDBD),
             width: 2,
           ),
         ),
@@ -124,10 +123,10 @@ class _SelectionIndicator extends StatelessWidget {
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color: selected ? _teal : Colors.transparent,
+        color: selected ? AppColors.primary : Colors.transparent,
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? _teal : const Color(0xFFBDBDBD),
+          color: selected ? AppColors.primary : const Color(0xFFBDBDBD),
           width: 2,
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/applicant_profile_model.dart';
 import '../../../shared/widgets/sync_info_banner.dart';
@@ -34,8 +35,6 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
   late bool _accessibleTransportation;
   late final TextEditingController _otherController;
 
-  static const Color _teal = Color(0xFF1B7A6E);
-
   @override
   void initState() {
     super.initState();
@@ -43,24 +42,9 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
     _writtenInstructions = support?.writtenInstructions ?? false;
     _extraInterviewTime = support?.extraInterviewTime ?? false;
     _remoteInterview = support?.remoteInterview ?? false;
-    // Restore new fields from the other field if present
-    final other = support?.other ?? '';
-    _stepFreeLocation = other.contains('stepFreeLocation');
-    _accessibleTransportation = other.contains('accessibleTransportation');
-    _otherController = TextEditingController(
-      text: _cleanOtherText(other),
-    );
-  }
-
-  /// Strip the internal tags from the other field for display.
-  String _cleanOtherText(String raw) {
-    return raw
-        .replaceAll('stepFreeLocation', '')
-        .replaceAll('accessibleTransportation', '')
-        .replaceAll(RegExp(r',\s*,'), ',')
-        .replaceAll(RegExp(r'^,\s*'), '')
-        .replaceAll(RegExp(r',\s*$'), '')
-        .trim();
+    _stepFreeLocation = support?.stepFreeLocation ?? false;
+    _accessibleTransportation = support?.accessibleTransportation ?? false;
+    _otherController = TextEditingController(text: support?.other ?? '');
   }
 
   @override
@@ -78,17 +62,14 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
   }
 
   void _save() {
-    final extras = <String>[];
-    if (_stepFreeLocation) extras.add('stepFreeLocation');
-    if (_accessibleTransportation) extras.add('accessibleTransportation');
     final userOther = _otherController.text.trim();
-    final allOther = [...extras, if (userOther.isNotEmpty) userOther].join(', ');
-
     final support = PrivateSupport(
       writtenInstructions: _writtenInstructions,
       extraInterviewTime: _extraInterviewTime,
       remoteInterview: _remoteInterview,
-      other: allOther.isEmpty ? null : allOther,
+      stepFreeLocation: _stepFreeLocation,
+      accessibleTransportation: _accessibleTransportation,
+      other: userOther.isEmpty ? null : userOther,
     );
     ref.read(onboardingDraftProvider.notifier).setPrivateSupport(support);
     _goToReview();
@@ -122,7 +103,7 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
                   value: 0.60,
                   minHeight: 6,
                   backgroundColor: const Color(0xFFE0E0E0),
-                  valueColor: const AlwaysStoppedAnimation<Color>(_teal),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -242,7 +223,7 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
                   const Spacer(),
                   FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: _teal,
+                      backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(50)),
