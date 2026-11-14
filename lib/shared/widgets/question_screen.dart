@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
@@ -67,7 +68,10 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     super.initState();
     _textController.addListener(_onTextChanged);
     _loadCurrentIntoController();
-    _readCurrentTitle();
+    // Defer TTS until after the first frame so it never fires mid-layout.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _readCurrentTitle();
+    });
   }
 
   void _onTextChanged() {
@@ -157,7 +161,9 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
         _showTextField = false;
         _loadCurrentIntoController();
       });
-      _readCurrentTitle();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _readCurrentTitle();
+      });
       if (_step.inputType == FormInputType.text ||
           _step.inputType == FormInputType.voice) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -178,9 +184,11 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
         _showTextField = false;
         _loadCurrentIntoController();
       });
-      _readCurrentTitle();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _readCurrentTitle();
+      });
     } else {
-      Navigator.of(context).maybePop();
+      context.pop();
     }
   }
 
@@ -553,13 +561,19 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
         children: [
           if (_current > 0)
             OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(80, AppSpacing.minTapTarget),
+              ),
               onPressed: _goBack,
               child: Text(AppStrings.back),
             )
           else
-            const SizedBox(width: 0),
+            const SizedBox.shrink(),
           const Spacer(),
           FilledButton(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(120, AppSpacing.minTapTarget),
+            ),
             onPressed: _advance,
             child: Text(_isLast ? widget.finalStepLabel : AppStrings.next),
           ),

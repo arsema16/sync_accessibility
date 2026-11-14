@@ -54,7 +54,7 @@ class _AccessPreferencesScreenState
         leading: IconButton(
           icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
           tooltip: AppStrings.goBack,
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: SafeArea(

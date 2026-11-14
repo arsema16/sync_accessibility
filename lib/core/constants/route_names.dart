@@ -16,7 +16,9 @@ class RouteNames {
 
   // Phase 2 stub routes (job/application flow).
   static const String jobs = 'jobs';
+  static const String myJobs = 'my-jobs';
   static const String profile = 'profile';
+  static const String more = 'more';
 }
 
 class AppRoutes {
@@ -33,5 +35,7 @@ class AppRoutes {
 
   // Phase 2 stub routes (job/application flow).
   static const String jobs = '/jobs';
+  static const String myJobs = '/my-jobs';
   static const String profile = '/profile';
+  static const String more = '/more';
 }

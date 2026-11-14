@@ -90,7 +90,7 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
         leading: IconButton(
           icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
           tooltip: AppStrings.goBack,
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: SafeArea(
@@ -217,12 +217,16 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
               child: Row(
                 children: [
                   OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(80, AppSpacing.minTapTarget),
+                    ),
                     onPressed: _skip,
                     child: const Text(AppStrings.skip),
                   ),
                   const Spacer(),
                   FilledButton(
                     style: FilledButton.styleFrom(
+                      minimumSize: const Size(120, AppSpacing.minTapTarget),
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(

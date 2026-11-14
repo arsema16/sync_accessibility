@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/jobs/jobs_screen.dart';
+import '../../features/jobs/my_jobs_screen.dart';
+import '../../features/more/more_screen.dart';
 import '../../features/onboarding/access_preferences_screen.dart';
 import '../../features/onboarding/contact_screen.dart';
 import '../../features/onboarding/identity_route_screen.dart';
@@ -68,9 +70,19 @@ final List<RouteBase> appRouteList = <RouteBase>[
     builder: (context, state) => const JobsScreen(),
   ),
   GoRoute(
+    name: RouteNames.myJobs,
+    path: AppRoutes.myJobs,
+    builder: (context, state) => const MyJobsScreen(),
+  ),
+  GoRoute(
     name: RouteNames.profile,
     path: AppRoutes.profile,
     builder: (context, state) => const ProfileScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.more,
+    path: AppRoutes.more,
+    builder: (context, state) => const MoreScreen(),
   ),
 ];
 

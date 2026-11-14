@@ -251,7 +251,7 @@ class AppTheme {
     );
     return InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surface,
+      fillColor: scheme.surfaceContainerHighest,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,

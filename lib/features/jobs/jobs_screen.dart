@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/route_names.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 
@@ -13,7 +15,6 @@ class JobsScreen extends StatefulWidget {
 
 class _JobsScreenState extends State<JobsScreen> {
   int _selectedFilter = 0;
-  int _selectedNav = 0;
 
   static const _filters = ['All', 'Remote', 'Step-free', 'With Support'];
 
@@ -70,10 +71,24 @@ class _JobsScreenState extends State<JobsScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedNav,
+        currentIndex: 0, // Home is always active on this screen
         selectedItemColor: AppColors.primary,
         unselectedItemColor: const Color(0xFF9E9E9E),
-        onTap: (i) => setState(() => _selectedNav = i),
+        onTap: (i) {
+          switch (i) {
+            case 0:
+              break; // already on Home
+            case 1:
+              context.pushNamed(RouteNames.myJobs);
+              break;
+            case 2:
+              context.pushNamed(RouteNames.profile);
+              break;
+            case 3:
+              context.pushNamed(RouteNames.more);
+              break;
+          }
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
