@@ -350,7 +350,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
   }
 
   /// Greeting header: SYNC monogram, greeting copy and a search shortcut —
-  /// the same rhythm as the app's reference design, in SYNC teal.
+  /// the same rhythm as the app's reference design, in deep purple.
   Widget _buildHeader() {
     return Padding(
       padding: EdgeInsets.only(
@@ -446,8 +446,6 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         AppSpacing.sm,
       ),
       child: Container(
-        // Sized by its content so the card grows with the user's text scale
-        // instead of clipping (the app clamps scaling at 1.3x).
         clipBehavior: Clip.antiAlias,
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.all(Radius.circular(28)),
@@ -482,7 +480,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xB3FFFFFF),
+                          color: const Color(0x33FFFFFF),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Text(
@@ -520,7 +518,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: AppColors.onHero,
+                      foregroundColor: AppColors.primary,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,
@@ -551,8 +549,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
-  /// Decorative teal shapes echoing the reference card artwork. They are
-  /// purely ornamental, so they carry no semantics of their own.
+  /// Decorative shapes for the hero banner. Purely ornamental.
   Widget _buildTipShapes() {
     return SizedBox(
       width: 132,
@@ -570,7 +567,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                 decoration: const BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(22)),
                   gradient: LinearGradient(
-                    colors: [AppColors.cardDeep, Color(0xFF0A4A43)],
+                    colors: [Color(0xFF4C1D95), Color(0xFF3B0764)],
                   ),
                 ),
               ),
@@ -597,7 +594,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(18)),
                 gradient: LinearGradient(
-                  colors: [AppColors.cardAqua, Color(0xFF9ED9CE)],
+                  colors: [AppColors.cardMint, Color(0xFFD4CCF0)],
                 ),
               ),
             ),
@@ -731,6 +728,7 @@ class _JobListView extends StatelessWidget {
           job: job,
           applied: appliedJobIds.contains(job.id),
           onApply: () => onApply(job),
+          cardIndex: index,
         );
       },
     );
@@ -738,17 +736,19 @@ class _JobListView extends StatelessWidget {
 }
 
 /// A single job listing with tag chips, a read-aloud action and an Apply
-/// action.
+/// action. Alternates between amber and sky-blue card backgrounds.
 class _JobCard extends ConsumerWidget {
   const _JobCard({
     required this.job,
     required this.applied,
     required this.onApply,
+    required this.cardIndex,
   });
 
   final Job job;
   final bool applied;
   final VoidCallback onApply;
+  final int cardIndex;
 
   /// What the speaker button reads out: the same information the card
   /// shows — title, employer, location and accommodation tags.
@@ -764,13 +764,19 @@ class _JobCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Alternate between amber and sky card backgrounds.
+    final isAmber = cardIndex.isEven;
+    final cardBg = isAmber ? AppColors.cardAmber : AppColors.cardSky;
+    final cardOnBg = isAmber ? AppColors.onCardAmber : AppColors.onCardSky;
+    final badgeBg = isAmber ? AppColors.cardAmberBadge : AppColors.cardSkyBadge;
+
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.all(Radius.circular(28)),
-        boxShadow: [
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: const BorderRadius.all(Radius.circular(28)),
+        boxShadow: const [
           BoxShadow(
             color: AppColors.shadowSoft,
             blurRadius: 18,
@@ -784,15 +790,15 @@ class _JobCard extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left: teal rounded-square icon
+              // Left: rounded-square icon in white
               Container(
                 width: 48,
                 height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(200),
+                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                 ),
-                child: const Icon(Icons.work, color: Colors.white, size: 24),
+                child: Icon(Icons.work, color: AppColors.primary, size: 24),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -801,10 +807,10 @@ class _JobCard extends ConsumerWidget {
                   children: [
                     Text(
                       job.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 15.5,
-                        color: AppColors.cardInk,
+                        color: cardOnBg,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -815,9 +821,9 @@ class _JobCard extends ConsumerWidget {
                             job.location!.isNotEmpty)
                           job.location!,
                       ].join(' · '),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.cardInkMuted,
+                        color: cardOnBg.withAlpha(170),
                       ),
                     ),
                     if (job.tags.isNotEmpty) ...[
@@ -825,8 +831,9 @@ class _JobCard extends ConsumerWidget {
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
-                        children:
-                            job.tags.map((tag) => _TagChip(label: tag)).toList(),
+                        children: job.tags
+                            .map((tag) => _TagChip(label: tag, badgeBg: badgeBg, textColor: cardOnBg))
+                            .toList(),
                       ),
                     ],
                   ],
@@ -837,9 +844,7 @@ class _JobCard extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              // Read this listing aloud — always available, whether or not
-              // the auto read-aloud preference is on (an explicit tap is
-              // itself the request).
+              // Read this listing aloud.
               Semantics(
                 button: true,
                 label: AppStrings.readJobAloud,
@@ -849,9 +854,9 @@ class _JobCard extends ConsumerWidget {
                     onPressed: () =>
                         ref.read(readAloudProvider)(_spokenSummary),
                     icon: const Icon(Icons.volume_up, size: 22),
-                    color: AppColors.primary,
+                    color: cardOnBg,
                     style: IconButton.styleFrom(
-                      side: const BorderSide(color: AppColors.cardBorder),
+                      backgroundColor: Colors.white.withAlpha(120),
                       shape: const CircleBorder(),
                       minimumSize: const Size(
                         AppSpacing.minTapTarget,
@@ -922,23 +927,29 @@ class _AppliedBadge extends StatelessWidget {
 }
 
 class _TagChip extends StatelessWidget {
-  const _TagChip({required this.label});
+  const _TagChip({
+    required this.label,
+    this.badgeBg = AppColors.cardAqua,
+    this.textColor = AppColors.onPrimaryContainer,
+  });
 
   final String label;
+  final Color badgeBg;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: const BoxDecoration(
-        color: AppColors.cardAqua,
-        borderRadius: BorderRadius.all(Radius.circular(50)),
+      decoration: BoxDecoration(
+        color: badgeBg,
+        borderRadius: const BorderRadius.all(Radius.circular(50)),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
-          color: AppColors.onPrimaryContainer,
+          color: textColor,
           fontWeight: FontWeight.w600,
         ),
       ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Raw color tokens for SYNC.
+/// Raw color tokens for SYNC — modern lavender/purple palette.
 ///
 /// These are chosen to meet WCAG AA contrast ratios for text against the
 /// surfaces they appear on:
@@ -14,24 +14,24 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ---- Brand (light) ----
-  static const Color primary = Color(0xFF1B7A6E);
+  // ---- Brand (light) — purple ----
+  static const Color primary = Color(0xFF7C3AED);       // vivid violet
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color primaryContainer = Color(0xFFB2DFDB);  // light teal
-  static const Color onPrimaryContainer = Color(0xFF004D44);
+  static const Color primaryContainer = Color(0xFFEDE9FE); // soft lavender
+  static const Color onPrimaryContainer = Color(0xFF3B0764);
 
-  static const Color secondary = Color(0xFF26A69A);          // lighter teal
+  static const Color secondary = Color(0xFFA78BFA);     // lighter purple
   static const Color onSecondary = Color(0xFFFFFFFF);
-  static const Color secondaryContainer = Color(0xFFE0F2F1);
-  static const Color onSecondaryContainer = Color(0xFF00332E);
+  static const Color secondaryContainer = Color(0xFFF5F3FF);
+  static const Color onSecondaryContainer = Color(0xFF4C1D95);
 
   // ---- Surfaces (light) ----
   static const Color surface = Color(0xFFFDFCFF);
-  static const Color onSurface = Color(0xFF1A1A1A);
-  static const Color surfaceVariant = Color(0xFFE0E2EC);
-  static const Color onSurfaceVariant = Color(0xFF43474E);
-  static const Color outline = Color(0xFF74777F);
-  static const Color outlineVariant = Color(0xFFC4C6D0);
+  static const Color onSurface = Color(0xFF1A1A2E);
+  static const Color surfaceVariant = Color(0xFFEDE9FE);
+  static const Color onSurfaceVariant = Color(0xFF4A4560);
+  static const Color outline = Color(0xFF8B84A3);
+  static const Color outlineVariant = Color(0xFFD4CCF0);
 
   // ---- Semantic (light) ----
   static const Color error = Color(0xFFB3261E);
@@ -44,22 +44,22 @@ class AppColors {
   static const Color onSuccessContainer = Color(0xFF0A2711);
 
   // ---- Dark ----
-  static const Color primaryDark = Color(0xFFA6CAFF);
-  static const Color onPrimaryDark = Color(0xFF002F66);
-  static const Color primaryContainerDark = Color(0xFF00468F);
-  static const Color onPrimaryContainerDark = Color(0xFFD7E3FF);
+  static const Color primaryDark = Color(0xFFC4B5FD);
+  static const Color onPrimaryDark = Color(0xFF3B0764);
+  static const Color primaryContainerDark = Color(0xFF5B21B6);
+  static const Color onPrimaryContainerDark = Color(0xFFEDE9FE);
 
-  static const Color secondaryDark = Color(0xFFAAC7FF);
-  static const Color onSecondaryDark = Color(0xFF0A1F44);
-  static const Color secondaryContainerDark = Color(0xFF1F4F9C);
-  static const Color onSecondaryContainerDark = Color(0xFFD6E4FF);
+  static const Color secondaryDark = Color(0xFFA78BFA);
+  static const Color onSecondaryDark = Color(0xFF2E1065);
+  static const Color secondaryContainerDark = Color(0xFF4C1D95);
+  static const Color onSecondaryContainerDark = Color(0xFFF5F3FF);
 
-  static const Color surfaceDark = Color(0xFF1A1C1E);
-  static const Color onSurfaceDark = Color(0xFFE3E2E6);
-  static const Color surfaceVariantDark = Color(0xFF43474E);
-  static const Color onSurfaceVariantDark = Color(0xFFC3C7CF);
-  static const Color outlineDark = Color(0xFF8D9199);
-  static const Color outlineVariantDark = Color(0xFF43474E);
+  static const Color surfaceDark = Color(0xFF1A1A2E);
+  static const Color onSurfaceDark = Color(0xFFE8E4F5);
+  static const Color surfaceVariantDark = Color(0xFF2D2847);
+  static const Color onSurfaceVariantDark = Color(0xFFC4B5FD);
+  static const Color outlineDark = Color(0xFF8B84A3);
+  static const Color outlineVariantDark = Color(0xFF3D3660);
 
   static const Color errorDark = Color(0xFFF2B8B5);
   static const Color onErrorDark = Color(0xFF601410);
@@ -69,9 +69,7 @@ class AppColors {
   static const Color onSuccessDark = Color(0xFF0A2711);
 
   // ---- High-contrast overrides ----
-  // Used by the stronger-contrast access preference. Pure black/white pairs
-  // for body text exceed 20:1.
-  static const Color primaryHighContrast = Color(0xFF0D4F47);
+  static const Color primaryHighContrast = Color(0xFF4C0FAD);
   static const Color onPrimaryHighContrast = Color(0xFFFFFFFF);
   static const Color surfaceHighContrast = Color(0xFFFFFFFF);
   static const Color onSurfaceHighContrast = Color(0xFF000000);
@@ -80,7 +78,7 @@ class AppColors {
   static const Color outlineHighContrast = Color(0xFF333333);
   static const Color errorHighContrast = Color(0xFF7A0E0A);
 
-  static const Color primaryDarkHighContrast = Color(0xFFB2DFDB);
+  static const Color primaryDarkHighContrast = Color(0xFFD8C4FF);
   static const Color onPrimaryDarkHighContrast = Color(0xFF000000);
   static const Color surfaceDarkHighContrast = Color(0xFF000000);
   static const Color onSurfaceDarkHighContrast = Color(0xFFFFFFFF);
@@ -89,39 +87,48 @@ class AppColors {
   static const Color outlineDarkHighContrast = Color(0xFFCCCCCC);
   static const Color errorDarkHighContrast = Color(0xFFFFB4AB);
 
-  // ---- Rounded-card UI ----
-  // Decorative tints for the card-based layout. Every pair below is used on a
-  // light card, so the "ink" colours are all >= 7:1 against their background.
+  // ---- Rounded-card UI — modern lavender style ----
+  /// Lavender page background (matches the reference design background).
+  static const Color pageGradientStart = Color(0xFFE8E4F8);
+  static const Color pageGradientEnd = Color(0xFFF0EDFC);
 
-  /// Page background behind the white content cards.
-  static const Color pageGradientStart = Color(0xFFE3F2EE);
-  static const Color pageGradientEnd = Color(0xFFF8FBFA);
+  /// Hero banner gradient — rich purple.
+  static const Color heroStart = Color(0xFF8B5CF6);
+  static const Color heroEnd = Color(0xFF6D28D9);
+  static const Color onHero = Color(0xFFFFFFFF);
 
-  /// The hero / feature card gradient, with the ink that sits on it.
-  static const Color heroStart = Color(0xFFB7E7DE);
-  static const Color heroEnd = Color(0xFF4FC3B4);
-  static const Color onHero = Color(0xFF08332C);
+  /// Vibrant accent cards (yellow, light-blue, pink).
+  static const Color cardAmber = Color(0xFFFFD54F);     // amber/yellow card
+  static const Color onCardAmber = Color(0xFF1A1200);   // near-black on amber
+  static const Color cardAmberBadge = Color(0xFFFFF8E1);
 
-  /// Tinted content cards (kept inside the teal family).
-  static const Color cardMint = Color(0xFFB2DFDB);
-  static const Color cardAqua = Color(0xFFDFF4F0);
-  static const Color cardSlate = Color(0xFFDCE6EF);
-  static const Color cardDeep = Color(0xFF0D4F47);
+  static const Color cardSky = Color(0xFFBBDEFB);       // light blue card
+  static const Color onCardSky = Color(0xFF0D1B2A);     // dark ink on sky
+  static const Color cardSkyBadge = Color(0xFFE3F2FD);
+
+  static const Color cardPink = Color(0xFFF8BBD0);      // rose/pink accent
+  static const Color onCardPink = Color(0xFF1A0010);
+
+  /// Soft lavender chip / badge background.
+  static const Color cardMint = Color(0xFFEDE9FE);
+  static const Color cardAqua = Color(0xFFE8E4F8);
+  static const Color cardSlate = Color(0xFFDCD8F0);
+  static const Color cardDeep = Color(0xFF4C1D95);
   static const Color onCardDeep = Color(0xFFFFFFFF);
 
   /// Text and outline colours used on the white cards.
   static const Color cardInk = Color(0xFF14151A);
-  static const Color cardInkMuted = Color(0xFF5F636B);
-  static const Color cardBorder = Color(0xFFE4E8F2);
-  static const Color cardTrack = Color(0xFFE0E1E7);
+  static const Color cardInkMuted = Color(0xFF5F5B75);
+  static const Color cardBorder = Color(0xFFE4E0F5);
+  static const Color cardTrack = Color(0xFFDDD9EE);
 
   /// Soft shadows, pre-multiplied so no `withOpacity` calls are needed.
-  static const Color shadowSoft = Color(0x141B7A6E); // 8% teal
-  static const Color shadowCard = Color(0x1F14151A); // 12% ink
-  static const Color shadowHero = Color(0x2E08332C); // 18% deep teal
+  static const Color shadowSoft = Color(0x1A7C3AED); // 10% purple
+  static const Color shadowCard = Color(0x1414151A); // 8% ink
+  static const Color shadowHero = Color(0x336D28D9); // 20% deep purple
 
   /// The dark floating navigation capsule.
   static const Color navBar = Color(0xFF14151A);
   static const Color navBarShadow = Color(0x3814151A); // 22% ink
-  static const Color navItemIdle = Color(0xB3FFFFFF); // white 70%
+  static const Color navItemIdle = Color(0xB3FFFFFF);  // white 70%
 }

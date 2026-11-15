@@ -111,7 +111,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      scaffoldBackgroundColor: isLight ? Colors.white : scheme.surface,
+      scaffoldBackgroundColor: isLight ? AppColors.pageGradientEnd : scheme.surface,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       textTheme: _textTheme(scheme),
       appBarTheme: AppBarTheme(
