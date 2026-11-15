@@ -14,11 +14,16 @@ class RouteNames {
   static const String profileReview = 'profile-review';
   static const String signIn = 'sign-in';
 
-  // Phase 2 stub routes (job/application flow).
+  // Job/application flow.
   static const String jobs = 'jobs';
   static const String myJobs = 'my-jobs';
   static const String profile = 'profile';
   static const String more = 'more';
+
+  // Career gateway: employer postings + application answers.
+  static const String employerJobs = 'employer-jobs';
+  static const String employerJobForm = 'employer-job-form';
+  static const String applyJob = 'apply-job';
 }
 
 class AppRoutes {
@@ -33,9 +38,14 @@ class AppRoutes {
   static const String profileReview = '/onboarding/profile-review';
   static const String signIn = '/sign-in';
 
-  // Phase 2 stub routes (job/application flow).
+  // Job/application flow.
   static const String jobs = '/jobs';
   static const String myJobs = '/my-jobs';
   static const String profile = '/profile';
   static const String more = '/more';
+
+  // Career gateway: employer postings + application answers.
+  static const String employerJobs = '/employer-jobs';
+  static const String employerJobForm = '/employer-jobs/form';
+  static const String applyJob = '/jobs/apply';
 }
