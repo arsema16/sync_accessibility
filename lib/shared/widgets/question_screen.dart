@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/access/access_callbacks.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/theme/app_colors.dart';
@@ -60,7 +61,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
       Map<String, Object>.from(widget.initialAnswers ?? const {});
   String? _error;
   bool _isListening = false;
-  bool _showVoiceHint = false;
+  String? _voiceHint;
   bool _showTextField = false;
 
   @override
@@ -75,8 +76,8 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   }
 
   void _onTextChanged() {
-    if (_showVoiceHint && _textController.text.isNotEmpty) {
-      setState(() => _showVoiceHint = false);
+    if (_voiceHint != null && _textController.text.isNotEmpty) {
+      setState(() => _voiceHint = null);
     }
   }
 
@@ -210,7 +211,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   Future<void> _startVoice() async {
     setState(() {
       _isListening = true;
-      _showVoiceHint = false;
+      _voiceHint = null;
     });
     try {
       final voiceInput = ref.read(voiceInputProvider);
@@ -218,17 +219,22 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
       if (!mounted) {
         return;
       }
-      if (result.trim().isNotEmpty) {
+      if (result.text.trim().isNotEmpty) {
         final existing = _textController.text.trim();
         _textController.text = existing.isEmpty
-            ? result.trim()
-            : '$existing ${result.trim()}';
+            ? result.text.trim()
+            : '$existing ${result.text.trim()}';
         _textController.selection = TextSelection.collapsed(
           offset: _textController.text.length,
         );
       } else {
-        // No result or STT unavailable; show typed-fallback hint.
-        setState(() => _showVoiceHint = true);
+        // Nothing heard after the retry budget, or no recogniser at all —
+        // say which, so "we missed you" never reads as "feature broken".
+        setState(() {
+          _voiceHint = result.status == VoiceInputStatus.noSpeech
+              ? AppStrings.voiceNoSpeech
+              : AppStrings.voiceUnavailable;
+        });
       }
     } finally {
       if (mounted) {
@@ -555,9 +561,9 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
                   : const Icon(Icons.mic_none, size: 20),
               label: Text(_isListening ? AppStrings.listening : AppStrings.speakInstead),
             ),
-            if (_showVoiceHint)
+            if (_voiceHint != null)
               Text(
-                AppStrings.voiceUnavailable,
+                _voiceHint!,
                 style: theme.textTheme.bodySmall,
               ),
           ],
@@ -643,9 +649,9 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
             onSubmitted: (_) => _advance(),
           ),
         ],
-        if (_showVoiceHint) ...[
+        if (_voiceHint != null) ...[
           const SizedBox(height: AppSpacing.sm),
-          Text(AppStrings.voiceUnavailable, style: theme.textTheme.bodySmall),
+          Text(_voiceHint!, style: theme.textTheme.bodySmall),
         ],
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.md),

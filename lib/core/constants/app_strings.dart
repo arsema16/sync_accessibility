@@ -30,6 +30,9 @@ class AppStrings {
   static const String voiceUnavailable = 'Voice input is not ready yet. You '
       'can type your answer, or check that your phone lets SYNC use the '
       'microphone.';
+  static const String voiceNoSpeech = 'We didn’t catch that. Tap the mic '
+      'and start speaking straight away — keep talking until your words '
+      'appear.';
 
   /// Announced to screen readers as the user moves between form steps.
   static String stepProgress(int current, int total) =>
