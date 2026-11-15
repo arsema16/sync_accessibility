@@ -321,10 +321,13 @@ class _AuthFormState extends ConsumerState<AuthForm> {
             ),
             onPressed: _loading ? null : _submit,
             child: _loading
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                ? Semantics(
+                    label: 'Loading, please wait',
+                    child: const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : Text(submitLabel),
           ),

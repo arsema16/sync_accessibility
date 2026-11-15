@@ -102,9 +102,9 @@ class _NavItem extends StatelessWidget {
       label: label,
       child: Tooltip(
         message: label,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
+        child: InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(29),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,

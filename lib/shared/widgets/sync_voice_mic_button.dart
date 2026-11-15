@@ -18,8 +18,9 @@ class SyncVoiceMicButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: isListening ? 'Listening' : 'Tap to record your answer by voice',
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(60),
         child: Container(
           width: 120,
           height: 120,

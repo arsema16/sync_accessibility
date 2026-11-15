@@ -39,8 +39,9 @@ class SyncOptionCard extends StatelessWidget {
       label: label,
       hint: description,
       value: selected ? 'Selected' : 'Not selected',
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           margin: const EdgeInsets.only(bottom: 12),
