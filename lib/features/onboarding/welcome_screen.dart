@@ -180,16 +180,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.md),
-                            // Accessibility Options / sign-in link
-                            TextButton(
+                            // Sign in — a full-width outlined button so a
+                            // returning user spots it straight away (the old
+                            // "Accessibility Options" link already navigated
+                            // here, just under a name nobody looked for).
+                            OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                side: const BorderSide(
+                                  color: AppColors.primary,
+                                ),
+                                minimumSize: const Size.fromHeight(
+                                  AppSpacing.minTapTarget,
+                                ),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(50)),
+                                ),
+                              ),
                               onPressed: () =>
                                   context.pushNamed(RouteNames.signIn),
                               child: const Text(
-                                'Accessibility Options',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                AppStrings.signInAction,
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
