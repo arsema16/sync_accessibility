@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/access/access_callbacks.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
@@ -43,8 +42,6 @@ class JobsScreen extends ConsumerStatefulWidget {
 class _JobsScreenState extends ConsumerState<JobsScreen> {
   int _selectedFilter = 0;
   String _query = '';
-  /// True while the mic-driven voice search is listening.
-  bool _voiceListening = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
@@ -185,7 +182,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
           slivers: [
             // Greeting header (no AppBar)
             SliverToBoxAdapter(child: _buildHeader()),
-            // Search bar with voice input — above the tip card
+            // Search bar — above the tip card
             SliverToBoxAdapter(child: _buildSearchBar()),
             // Hero accessibility tip with a built-in read-aloud action
             SliverToBoxAdapter(child: _buildTipCard()),
@@ -678,37 +675,6 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
-  /// Fills the search box with the words spoken into the mic. When nothing
-  /// was heard (or the device has no recogniser) the reason is shown in a
-  /// snackbar so a silent failure never reads as "voice search is broken".
-  Future<void> _voiceSearch() async {
-    if (_voiceListening) return;
-    setState(() => _voiceListening = true);
-    try {
-      final result = await ref.read(voiceInputProvider)();
-      if (!mounted) return;
-      final words = result.text.trim();
-      if (result.status == VoiceInputStatus.recognized && words.isNotEmpty) {
-        setState(() {
-          _query = words;
-          _searchController.text = words;
-          _searchController.selection = TextSelection.collapsed(
-            offset: words.length,
-          );
-        });
-      } else {
-        final message = result.status == VoiceInputStatus.noSpeech
-            ? AppStrings.voiceNoSpeech
-            : AppStrings.voiceUnavailable;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message)));
-      }
-    } finally {
-      if (mounted) setState(() => _voiceListening = false);
-    }
-  }
-
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -723,14 +689,12 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         onChanged: (value) => setState(() => _query = value),
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: AppStrings.jobsVoiceSearchHint,
+          hintText: AppStrings.jobsSearchHint,
           prefixIcon: const Icon(Icons.search),
-          // Clear (when there is text) plus the mic that searches by voice.
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_query.isNotEmpty)
-                IconButton(
+          // Clear button, only while there is text to clear.
+          suffixIcon: _query.isEmpty
+              ? null
+              : IconButton(
                   tooltip: 'Clear search',
                   onPressed: () {
                     _searchController.clear();
@@ -738,19 +702,6 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                   },
                   icon: const Icon(Icons.close),
                 ),
-              IconButton(
-                tooltip: AppStrings.jobsVoiceSearch,
-                onPressed: _voiceListening ? null : _voiceSearch,
-                icon: _voiceListening
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.mic, color: AppColors.primary),
-              ),
-            ],
-          ),
           fillColor: Colors.white,
           filled: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 0),

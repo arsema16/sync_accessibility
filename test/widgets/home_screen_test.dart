@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:sync_accessibility/core/access/access_callbacks.dart';
 import 'package:sync_accessibility/core/constants/app_strings.dart';
 import 'package:sync_accessibility/core/providers/app_providers.dart';
 import 'package:sync_accessibility/features/jobs/jobs_screen.dart';
@@ -12,8 +11,7 @@ import 'package:sync_accessibility/features/jobs/jobs_screen.dart';
 //   - the greeting follows the time of day (morning/afternoon/evening)
 //   - the whole screen — header, search, tip, filters, job cards — is one
 //     CustomScrollView, so the cards scroll from the very top
-//   - the search bar sits above the voice tip card, invites voice input and
-//     carries a mic that fills it with spoken words
+//   - the search bar sits above the tip card with a plain search hint
 //   - every category chip label stays fully visible (no clipped text)
 void main() {
   group('JobsScreen.greetingFor', () {
@@ -76,33 +74,16 @@ void main() {
     );
   });
 
-  testWidgets('the search bar sits above the voice tip card', (tester) async {
+  testWidgets('the search bar sits above the tip card', (tester) async {
     await pumpHome(tester);
 
     final searchTop = tester.getTopLeft(find.byType(TextField)).dy;
     final tipTop = tester.getTopLeft(find.text('Apply with your voice')).dy;
     expect(searchTop, lessThan(tipTop));
 
-    // It invites voice input and offers a mic to search by voice.
-    expect(find.text(AppStrings.jobsVoiceSearchHint), findsOneWidget);
-    expect(find.byTooltip(AppStrings.jobsVoiceSearch), findsOneWidget);
-  });
-
-  testWidgets('tapping the mic fills the search box with spoken words',
-      (tester) async {
-    await pumpHome(
-      tester,
-      extraOverrides: <Override>[
-        voiceInputProvider.overrideWithValue(
-          () async => const VoiceInputResult.recognized('warehouse'),
-        ),
-      ],
-    );
-
-    await tester.tap(find.byTooltip(AppStrings.jobsVoiceSearch));
-    await tester.pumpAndSettle();
-
-    expect(find.widgetWithText(TextField, 'warehouse'), findsOneWidget);
+    // It offers a plain text hint and a clear button, no mic.
+    expect(find.text(AppStrings.jobsSearchHint), findsOneWidget);
+    expect(find.byIcon(Icons.mic), findsNothing);
   });
 
   testWidgets('every category chip label is fully visible', (tester) async {
