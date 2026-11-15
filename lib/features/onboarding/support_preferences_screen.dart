@@ -82,6 +82,7 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
 
   @override
   Widget build(BuildContext context) {
+    final simpler = ref.watch(accessPreferencesNotifierProvider).simplerWording;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -134,18 +135,22 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'What support would help you?',
-                      style: TextStyle(
+                    Text(
+                      simpler
+                          ? AppStrings.supportHeadingSimple
+                          : 'What support would you like?',
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    const Text(
-                      'Select any options that make applying or interviewing easier.',
-                      style: TextStyle(
+                    Text(
+                      simpler
+                          ? AppStrings.supportSubtitleSimple
+                          : AppStrings.supportSubtitle,
+                      style: const TextStyle(
                         fontSize: 15,
                         color: Color(0xFF757575),
                       ),

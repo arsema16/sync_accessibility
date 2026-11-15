@@ -33,6 +33,8 @@ class IdentityRouteScreen extends ConsumerWidget {
           id: 'identityRoute',
           title: AppStrings.identityHeading,
           hint: AppStrings.identityHint,
+          simpleTitle: AppStrings.identityHeadingSimple,
+          simpleHint: AppStrings.identityHintSimple,
           inputType: FormInputType.choice,
           options: const <FormOption>[
             FormOption(

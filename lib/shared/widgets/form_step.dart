@@ -28,6 +28,8 @@ class FormStep {
     required this.title,
     required this.inputType,
     this.hint,
+    this.simpleTitle,
+    this.simpleHint,
     this.options = const <FormOption>[],
     this.keyboardType,
     this.validator,
@@ -36,6 +38,13 @@ class FormStep {
 
   /// Key used to store this step's answer in the answers map.
   final String id;
+
+  /// Short, plain-language replacement for [title], shown instead when the
+  /// user has enabled "Use simpler wording" in their Access Passport.
+  final String? simpleTitle;
+
+  /// Short, plain-language replacement for [hint] (see [simpleTitle]).
+  final String? simpleHint;
 
   /// The question text, shown as a heading.
   final String title;

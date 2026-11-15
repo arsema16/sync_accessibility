@@ -93,10 +93,25 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
 
   bool get _isLast => _current == widget.steps.length - 1;
 
+  /// Whether the Access Passport asks for plain, simple wording.
+  bool get _simplerWording =>
+      ref.read(accessPreferencesNotifierProvider).simplerWording;
+
+  /// The heading for [step], swapping in the simple variant when the user
+  /// has enabled simpler wording and one is provided.
+  String _titleFor(FormStep step) =>
+      _simplerWording && step.simpleTitle != null
+          ? step.simpleTitle!
+          : step.title;
+
+  /// The hint for [step] — see [_titleFor].
+  String? _hintFor(FormStep step) =>
+      _simplerWording && step.simpleHint != null ? step.simpleHint! : step.hint;
+
   void _readCurrentTitle() {
     final access = ref.read(accessPreferencesNotifierProvider);
     if (access.readAloud) {
-      ref.read(readAloudProvider)(_step.title);
+      ref.read(readAloudProvider)(_titleFor(_step));
     }
   }
 
@@ -225,6 +240,8 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Watch so switching simpler wording mid-flow re-renders the current step.
+    ref.watch(accessPreferencesNotifierProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -322,20 +339,22 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   Widget _buildChoice(ThemeData theme, {required bool multi}) {
     final step = _step;
     final current = _answers[step.id];
+    final title = _titleFor(step);
+    final hint = _hintFor(step);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Semantics(
           header: true,
           child: Text(
-            step.title,
+            title,
             style: theme.textTheme.headlineMedium,
           ),
         ),
-        if (step.hint != null) ...[
+        if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
-            step.hint!,
+            hint,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF757575),
             ),
@@ -401,20 +420,22 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   }
 
   Widget _buildTextField(ThemeData theme) {
+    final title = _titleFor(_step);
+    final hint = _hintFor(_step);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Semantics(
           header: true,
           child: Text(
-            _step.title,
+            title,
             style: theme.textTheme.headlineMedium,
           ),
         ),
-        if (_step.hint != null) ...[
+        if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
-            _step.hint!,
+            hint,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF757575),
             ),
@@ -427,10 +448,42 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           keyboardType: _step.keyboardType ?? TextInputType.text,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            labelText: _step.title,
-            hintText: _step.hint,
+            labelText: title,
+            hintText: hint,
           ),
           onSubmitted: (_) => _advance(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Voice input on every field: speak instead of typing. The typed
+        // answer above always remains editable.
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(48, AppSpacing.minTapTarget),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(50)),
+                ),
+              ),
+              onPressed: _isListening ? null : _startVoice,
+              icon: _isListening
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.mic_none, size: 20),
+              label: Text(_isListening ? AppStrings.listening : AppStrings.speakInstead),
+            ),
+            if (_showVoiceHint)
+              Text(
+                AppStrings.voiceUnavailable,
+                style: theme.textTheme.bodySmall,
+              ),
+          ],
         ),
         if (_error != null) _buildError(theme),
       ],
@@ -438,20 +491,22 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   }
 
   Widget _buildVoiceField(ThemeData theme) {
+    final title = _titleFor(_step);
+    final hint = _hintFor(_step);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Semantics(
           header: true,
           child: Text(
-            _step.title,
+            title,
             style: theme.textTheme.headlineMedium,
           ),
         ),
-        if (_step.hint != null) ...[
+        if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
-            _step.hint!,
+            hint,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF757575),
             ),
@@ -507,8 +562,8 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
             minLines: 1,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: _step.title,
-              hintText: _step.hint,
+              labelText: title,
+              hintText: hint,
             ),
             onSubmitted: (_) => _advance(),
           ),
