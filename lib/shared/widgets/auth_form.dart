@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
@@ -180,7 +181,23 @@ class _AuthFormState extends ConsumerState<AuthForm> {
               labelText: AppStrings.emailLabel,
               hintText: AppStrings.authEmailHint,
               prefixIcon: const Icon(Icons.email_outlined),
-              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: AppColors.pageGradientEnd,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.cardBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.cardBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
+              ),
             ),
             validator: _validateEmail,
           ),
@@ -197,7 +214,23 @@ class _AuthFormState extends ConsumerState<AuthForm> {
               labelText: AppStrings.passwordLabel,
               hintText: AppStrings.passwordHint,
               prefixIcon: const Icon(Icons.lock_outline),
-              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: AppColors.pageGradientEnd,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.cardBorder),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.cardBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
+              ),
               suffixIcon: IconButton(
                 tooltip:
                     _obscurePassword ? AppStrings.showPassword : AppStrings.hidePassword,
@@ -281,7 +314,7 @@ class _Message extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color),
         ),
         child: Row(
@@ -312,6 +345,9 @@ Future<bool> showAuthPrompt(
   String? initialEmail,
   String? notice,
 }) async {
+  // Announce the prompt's title when read-aloud is on. The dialog has no
+  // initState of its own, so the title is spoken from here.
+  _speakAuthPromptTitle(context);
   final signedIn = await showDialog<bool>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -333,4 +369,14 @@ Future<bool> showAuthPrompt(
     ),
   );
   return signedIn ?? false;
+}
+
+/// Reads [AppStrings.authPromptTitle] aloud using the providers mounted above
+/// [context] — a no-op unless the read-aloud preference is on.
+void _speakAuthPromptTitle(BuildContext context) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final access = container.read(accessPreferencesNotifierProvider);
+  if (access.readAloud) {
+    container.read(readAloudProvider)(AppStrings.authPromptTitle);
+  }
 }

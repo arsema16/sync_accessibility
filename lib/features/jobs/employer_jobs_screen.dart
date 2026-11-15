@@ -15,8 +15,27 @@ import '../../../shared/widgets/status_view.dart';
 /// Reads `jobs` rows where `employer_id` matches the session user (RLS
 /// guarantees they can only ever see/edit their own) and offers create, edit
 /// and delete through [EmployerJobFormScreen].
-class EmployerJobsScreen extends ConsumerWidget {
+class EmployerJobsScreen extends ConsumerStatefulWidget {
   const EmployerJobsScreen({super.key});
+
+  @override
+  ConsumerState<EmployerJobsScreen> createState() =>
+      _EmployerJobsScreenState();
+}
+
+class _EmployerJobsScreenState extends ConsumerState<EmployerJobsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Read the screen heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)(AppStrings.employerJobsTitle);
+      }
+    });
+  }
 
   Future<void> _confirmDelete(
     BuildContext context,
@@ -61,24 +80,25 @@ class EmployerJobsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageGradientEnd,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.chevron_left, color: AppColors.cardInk),
           tooltip: AppStrings.goBack,
           onPressed: () => context.pop(),
         ),
         title: const Text(
           AppStrings.employerJobsTitle,
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: AppColors.cardInk,
           ),
         ),
       ),
@@ -91,7 +111,16 @@ class EmployerJobsScreen extends ConsumerWidget {
               icon: const Icon(Icons.add),
               label: const Text(AppStrings.employerPostJob),
             ),
-      body: SafeArea(child: _buildBody(context, ref, user?.id)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(top: false, child: _buildBody(context, ref, user?.id)),
+      ),
     );
   }
 
@@ -163,11 +192,17 @@ class _EmployerJobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.all(Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSoft,
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +214,7 @@ class _EmployerJobCard extends StatelessWidget {
                 height: 44,
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
                 ),
                 child: const Icon(Icons.work, color: Colors.white, size: 22),
               ),
@@ -191,9 +226,9 @@ class _EmployerJobCard extends StatelessWidget {
                     Text(
                       job.title,
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        color: AppColors.cardInk,
                       ),
                     ),
                     if (job.location != null && job.location!.isNotEmpty)
@@ -201,7 +236,7 @@ class _EmployerJobCard extends StatelessWidget {
                         job.location!,
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF757575),
+                          color: AppColors.cardInkMuted,
                         ),
                       ),
                   ],
@@ -252,20 +287,19 @@ class _EmployerJobCard extends StatelessWidget {
                   .map(
                     (tag) => Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                        horizontal: 10,
+                        vertical: 4,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50),
-                        border: Border.all(color: AppColors.primary),
+                      decoration: const BoxDecoration(
+                        color: AppColors.cardAqua,
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
                       child: Text(
                         tag,
                         style: const TextStyle(
                           fontSize: 11,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),

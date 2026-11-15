@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/auth_form.dart';
 
@@ -23,6 +24,19 @@ class SignInScreen extends ConsumerStatefulWidget {
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   bool _signingOut = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Read the heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)(AppStrings.signInHeading);
+      }
+    });
+  }
+
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
     await ref.read(authServiceProvider).signOut();
@@ -39,16 +53,62 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.signInHeading)),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.pagePadding),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
-              child: user == null
-                  ? _buildForm(theme)
-                  : _buildSignedIn(theme, user.email),
+      backgroundColor: AppColors.pageGradientEnd,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.chevron_left, color: AppColors.cardInk),
+          tooltip: AppStrings.goBack,
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          AppStrings.signInHeading,
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: AppColors.cardInk,
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.sm,
+              AppSpacing.pagePadding,
+              AppSpacing.lg,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(22, 26, 22, 26),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(36)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadowSoft,
+                        blurRadius: 30,
+                        offset: Offset(0, 15),
+                      ),
+                    ],
+                  ),
+                  child: user == null
+                      ? _buildForm(theme)
+                      : _buildSignedIn(theme, user.email),
+                ),
+              ),
             ),
           ),
         ),
@@ -60,26 +120,47 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSpacing.lg),
-        Icon(
-          Icons.lock_outline,
-          size: 56,
-          color: theme.colorScheme.primary,
+        Container(
+          width: 72,
+          height: 72,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.heroStart, AppColors.heroEnd],
+            ),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.lock_outline,
+            size: 34,
+            color: AppColors.onHero,
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         Semantics(
           header: true,
           child: Text(
             AppStrings.signInHeading,
             textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+              color: AppColors.cardInk,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           AppStrings.signInSubtitle,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyLarge,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.45,
+            color: AppColors.cardInkMuted,
+          ),
         ),
         const SizedBox(height: AppSpacing.xl),
         AuthForm(
@@ -89,7 +170,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             context.goNamed(RouteNames.jobs);
           },
         ),
-        const SizedBox(height: AppSpacing.xl),
       ],
     );
   }
@@ -103,14 +183,18 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           child: Container(
             width: 88,
             height: 88,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.heroStart, AppColors.heroEnd],
+              ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.person,
               size: 44,
-              color: theme.colorScheme.onPrimaryContainer,
+              color: AppColors.onHero,
             ),
           ),
         ),
@@ -120,7 +204,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           child: Text(
             AppStrings.signedInAs(email),
             textAlign: TextAlign.center,
-            style: theme.textTheme.titleLarge,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.cardInk,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.xl),

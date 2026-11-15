@@ -71,6 +71,19 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
   bool _saving = false;
   bool _saved = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Read the heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)('Review Your Application');
+      }
+    });
+  }
+
   Future<void> _saveProfile() async {
     // Resolve the account first (prompting if needed) so the button only
     // shows "saving" while a save is genuinely in flight.
@@ -138,72 +151,89 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
     final supportItems = _supportSummary(support);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageGradientEnd,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.chevron_left, color: AppColors.cardInk),
           tooltip: AppStrings.goBack,
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress bar: 5 of 5 (100%)
-            Column(
-              children: [
-                LinearProgressIndicator(
-                  value: 1.0,
-                  minHeight: 6,
-                  backgroundColor: const Color(0xFFE0E0E0),
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.sm,
-                    AppSpacing.pagePadding,
-                    AppSpacing.xs,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '5 of 5',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF757575)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              // Progress bar: 5 of 5 (100%)
+              Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: const LinearProgressIndicator(
+                      value: 1.0,
+                      minHeight: 6,
+                      backgroundColor: AppColors.cardTrack,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.pagePadding,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Review Your Application',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.sm,
+                      AppSpacing.pagePadding,
+                      AppSpacing.xs,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '5 of 5',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.cardInkMuted,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    const Text(
-                      'Please check your information before submitting.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF757575),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pagePadding,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Review Your Application',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: AppColors.cardInk,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.sm),
+                      const Text(
+                        'Please check your information before submitting.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.45,
+                          color: AppColors.cardInkMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
                     _InfoRow(
                       icon: Icons.person,
                       title: AppStrings.sectionName,
@@ -326,114 +356,135 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
           ],
         ),
       ),
+      ),
     );
   }
 
   Widget _buildCompletion(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.pagePadding),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.xxl),
-                // Confetti dots + check circle
-                Center(
-                  child: SizedBox(
-                    width: 180,
-                    height: 180,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Scatter colored dots
-                        ..._confettiDots(),
-                        // Large teal circle with check
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
+      backgroundColor: AppColors.pageGradientEnd,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.xxl),
+                  // Confetti dots + check circle
+                  Center(
+                    child: SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Scatter colored dots
+                          ..._confettiDots(),
+                          // Large teal circle with check
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [AppColors.heroStart, AppColors.heroEnd],
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              color: AppColors.onHero,
+                              size: 56,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 56,
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Semantics(
+                    header: true,
+                    liveRegion: true,
+                    child: const Text(
+                      'Application Submitted!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: AppColors.cardInk,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const Text(
+                    "You'll be notified about the status of your application soon.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.45,
+                      color: AppColors.cardInkMuted,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  // Thank-you banner
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.cardAqua,
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    child: const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.star, color: AppColors.primary, size: 20),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Thank you for being part of a more inclusive workforce.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: AppColors.onPrimaryContainer,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Semantics(
-                  header: true,
-                  liveRegion: true,
-                  child: const Text(
-                    'Application Submitted!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const Text(
-                  "You'll be notified about the status of your application soon.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 15, color: Color(0xFF757575)),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                // Yellow banner
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Icon(Icons.star, color: Colors.amber, size: 20),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Thank you for being part of a more inclusive workforce.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF5D4037),
-                          ),
-                        ),
+                  const SizedBox(height: AppSpacing.xl),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      minimumSize:
+                          const Size.fromHeight(AppSpacing.minTapTarget),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(AppSpacing.minTapTarget),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(50)),
+                    ),
+                    onPressed: () => context.pushNamed(RouteNames.jobs),
+                    child: const Text(
+                      'Back to Jobs',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  onPressed: () => context.pushNamed(RouteNames.jobs),
-                  child: const Text(
-                    'Back to Jobs',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -503,9 +554,11 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Card(
         elevation: 0,
+        margin: EdgeInsets.zero,
+        color: Colors.white,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFFE0E0E0)),
-          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -515,11 +568,11 @@ class _InfoRow extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
+                decoration: const BoxDecoration(
+                  color: AppColors.cardAqua,
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                 ),
-                child: Icon(icon, color: Colors.white, size: 20),
+                child: Icon(icon, color: AppColors.primary, size: 20),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -530,7 +583,7 @@ class _InfoRow extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF757575),
+                        color: AppColors.cardInkMuted,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -538,8 +591,8 @@ class _InfoRow extends StatelessWidget {
                       value,
                       style: const TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.cardInk,
                       ),
                     ),
                   ],
@@ -551,7 +604,7 @@ class _InfoRow extends StatelessWidget {
                 button: true,
                 child: TextButton(
                   onPressed: onEdit,
-                  child: Text(
+                  child: const Text(
                     AppStrings.edit,
                     style: TextStyle(color: AppColors.primary),
                   ),

@@ -45,6 +45,19 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
     _stepFreeLocation = support?.stepFreeLocation ?? false;
     _accessibleTransportation = support?.accessibleTransportation ?? false;
     _otherController = TextEditingController(text: support?.other ?? '');
+
+    // Read the step heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)(
+          access.simplerWording
+              ? AppStrings.supportHeadingSimple
+              : 'What support would you like?',
+        );
+      }
+    });
   }
 
   @override
@@ -84,78 +97,93 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
   Widget build(BuildContext context) {
     final simpler = ref.watch(accessPreferencesNotifierProvider).simplerWording;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageGradientEnd,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.chevron_left, color: AppColors.cardInk),
           tooltip: AppStrings.goBack,
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress indicator at top
-            Column(
-              children: [
-                LinearProgressIndicator(
-                  value: 0.60,
-                  minHeight: 6,
-                  backgroundColor: const Color(0xFFE0E0E0),
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.sm,
-                    AppSpacing.pagePadding,
-                    AppSpacing.xs,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '3 of 5',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF757575),
-                      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              // Progress indicator at top
+              Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: const LinearProgressIndicator(
+                      value: 0.60,
+                      minHeight: 6,
+                      backgroundColor: AppColors.cardTrack,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
-                ),
-              ],
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.pagePadding,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      simpler
-                          ? AppStrings.supportHeadingSimple
-                          : 'What support would you like?',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.sm,
+                      AppSpacing.pagePadding,
+                      AppSpacing.xs,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '3 of 5',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.cardInkMuted,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      simpler
-                          ? AppStrings.supportSubtitleSimple
-                          : AppStrings.supportSubtitle,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Color(0xFF757575),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.pagePadding,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        simpler
+                            ? AppStrings.supportHeadingSimple
+                            : 'What support would you like?',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          color: AppColors.cardInk,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        simpler
+                            ? AppStrings.supportSubtitleSimple
+                            : AppStrings.supportSubtitle,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.45,
+                          color: AppColors.cardInkMuted,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
                     SyncOptionCard(
                       icon: Icons.accessible_forward,
                       label: 'Step-free interview location',
@@ -249,6 +277,7 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
             ),
           ],
         ),
+      ),
       ),
     );
   }

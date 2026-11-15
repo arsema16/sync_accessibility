@@ -38,8 +38,8 @@ class StatusView extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w700,
+                color: AppColors.cardInk,
               ),
             ),
             if (body != null) ...[
@@ -49,7 +49,8 @@ class StatusView extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF757575),
+                  height: 1.45,
+                  color: AppColors.cardInkMuted,
                 ),
               ),
             ],

@@ -12,6 +12,7 @@ import '../../../models/job_application_model.dart';
 import '../../../models/job_model.dart';
 import '../../../shared/widgets/auth_form.dart';
 import '../../../shared/widgets/status_view.dart';
+import '../../../shared/widgets/sync_bottom_nav.dart';
 
 /// Job listings screen with teal header, search, filters, and job cards.
 ///
@@ -33,6 +34,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
   int _selectedFilter = 0;
   String _query = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   static const _filters = [
     'All',
@@ -45,9 +47,34 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
   /// Index of the private support-needs filter in [_filters].
   static const _supportFilterIndex = 4;
 
+  /// The hero "accessibility tip" card. [tipSpoken] is what the read-aloud
+  /// button announces — it matches the visible copy word for word.
+  static const String tipTitle = 'Apply with your voice';
+  static const String tipBody = 'Speak your answers instead of typing.';
+  static const String tipSpoken =
+      'Accessibility tip. Apply with your voice. '
+      'Speak your answers instead of typing. '
+      'Tap the mic on any question.';
+
+  @override
+  void initState() {
+    super.initState();
+    // Read the screen heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)(
+          'Good morning! Discover jobs that fit your needs.',
+        );
+      }
+    });
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -120,66 +147,40 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         : null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Dark teal header (no AppBar)
-          _buildHeader(),
-          // Search bar
-          _buildSearchBar(),
-          // Filter chips
-          _buildFilterRow(),
-          // Job cards list (or the support-filter guidance states)
-          Expanded(
-            child: supportFilterOn
-                ? _buildSupportFilterBody(
-                    context,
-                    jobsAsync,
-                    profileAsync,
-                    user != null,
-                  )
-                : _buildJobsBody(jobsAsync, appliedJobIds),
+      backgroundColor: AppColors.pageGradientEnd,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            // Greeting header (no AppBar)
+            _buildHeader(),
+            // Hero accessibility tip with a built-in read-aloud action
+            _buildTipCard(),
+            // Search bar
+            _buildSearchBar(),
+            // Filter chips
+            _buildFilterRow(),
+            // Job cards list (or the support-filter guidance states)
+            Expanded(
+              child: supportFilterOn
+                  ? _buildSupportFilterBody(
+                      context,
+                      jobsAsync,
+                      profileAsync,
+                      user != null,
+                    )
+                  : _buildJobsBody(jobsAsync, appliedJobIds),
+            ),
+          ],
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Home is always active on this screen
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: const Color(0xFF9E9E9E),
-        onTap: (i) {
-          switch (i) {
-            case 0:
-              break; // already on Home
-            case 1:
-              context.pushNamed(RouteNames.myJobs);
-              break;
-            case 2:
-              context.pushNamed(RouteNames.profile);
-              break;
-            case 3:
-              context.pushNamed(RouteNames.more);
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border),
-            label: 'My Jobs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.more_horiz),
-            label: 'More',
-          ),
-        ],
-      ),
+      bottomNavigationBar: const SyncBottomNav(currentIndex: 0),
     );
   }
 
@@ -326,7 +327,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                     AppStrings.supportFilterMatchedHint,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF757575),
+                      color: AppColors.cardInkMuted,
                     ),
                   ),
                 ),
@@ -348,41 +349,259 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
+  /// Greeting header: SYNC monogram, greeting copy and a search shortcut —
+  /// the same rhythm as the app's reference design, in SYNC teal.
   Widget _buildHeader() {
-    return Container(
-      color: AppColors.primary,
+    return Padding(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + AppSpacing.md,
         left: AppSpacing.pagePadding,
         right: AppSpacing.pagePadding,
-        bottom: AppSpacing.lg,
+        bottom: AppSpacing.sm,
       ),
       child: Row(
         children: [
-          Expanded(
+          Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.heroStart, AppColors.heroEnd],
+              ),
+              border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2)),
+            ),
+            child: const Text(
+              'S',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.onHero,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Good morning!',
                   style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                    color: AppColors.cardInk,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 2),
                 Text(
                   'Discover jobs that fit your needs.',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
+                    fontSize: 13,
+                    color: AppColors.cardInkMuted,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.notifications_none, color: Colors.white, size: 28),
+          const SizedBox(width: 12),
+          // Round search shortcut that jumps into the search field below.
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.cardBorder, width: 1.2),
+            ),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              tooltip: AppStrings.jobsSearchHint,
+              onPressed: () => FocusScope.of(context).requestFocus(
+                _searchFocusNode,
+              ),
+              icon: const Icon(
+                Icons.search_rounded,
+                size: 22,
+                color: AppColors.cardInk,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Hero card: a rotating accessibility tip with read-aloud built in.
+  Widget _buildTipCard() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        AppSpacing.xs,
+        AppSpacing.pagePadding,
+        AppSpacing.sm,
+      ),
+      child: Container(
+        // Sized by its content so the card grows with the user's text scale
+        // instead of clipping (the app clamps scaling at 1.3x).
+        clipBehavior: Clip.antiAlias,
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(28)),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.heroStart, AppColors.heroEnd],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowHero,
+              blurRadius: 22,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(right: -16, top: -20, child: _buildTipShapes()),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xB3FFFFFF),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Accessibility tip',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onHero,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        tipTitle,
+                        style: TextStyle(
+                          fontSize: 22,
+                          height: 1.1,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                          color: AppColors.onHero,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        tipBody,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.onHero,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: AppColors.onHero,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      minimumSize: const Size(0, 40),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                      ),
+                    ),
+                    onPressed: () =>
+                        ref.read(readAloudProvider)(tipSpoken),
+                    icon: const Icon(Icons.volume_up, size: 18),
+                    label: const Text(
+                      AppStrings.readAloud,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Decorative teal shapes echoing the reference card artwork. They are
+  /// purely ornamental, so they carry no semantics of their own.
+  Widget _buildTipShapes() {
+    return SizedBox(
+      width: 132,
+      height: 156,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 8,
+            right: 22,
+            child: Transform.rotate(
+              angle: 0.45,
+              child: Container(
+                width: 44,
+                height: 62,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(22)),
+                  gradient: LinearGradient(
+                    colors: [AppColors.cardDeep, Color(0xFF0A4A43)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 46,
+            right: 66,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: const BoxDecoration(
+                color: Color(0xE6FFFFFF),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 14,
+            right: 12,
+            child: Container(
+              width: 52,
+              height: 44,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(18)),
+                gradient: LinearGradient(
+                  colors: [AppColors.cardAqua, Color(0xFF9ED9CE)],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -398,6 +617,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       ),
       child: TextField(
         controller: _searchController,
+        focusNode: _searchFocusNode,
         onChanged: (value) => setState(() => _query = value),
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
@@ -418,11 +638,11 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
-            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            borderSide: const BorderSide(color: AppColors.cardBorder),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
-            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+            borderSide: const BorderSide(color: AppColors.cardBorder),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
@@ -446,24 +666,34 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final selected = _selectedFilter == index;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilter = index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primary : Colors.white,
-                borderRadius: BorderRadius.circular(50),
-                border: Border.all(
-                  color: selected ? AppColors.primary : const Color(0xFFE0E0E0),
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: _filters[index],
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedFilter = index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.navBar : Colors.white,
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(
+                    color: selected
+                        ? AppColors.navBar
+                        : AppColors.cardBorder,
+                    width: 1.2,
+                  ),
                 ),
-              ),
-              child: Text(
-                _filters[index],
-                style: TextStyle(
-                  color: selected ? Colors.white : const Color(0xFF1A1A1A),
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13,
+                child: Text(
+                  _filters[index],
+                  style: TextStyle(
+                    color: selected ? Colors.white : AppColors.cardInk,
+                    fontWeight:
+                        selected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -523,11 +753,17 @@ class _JobCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.all(Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSoft,
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,13 +771,13 @@ class _JobCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left: teal square icon
+              // Left: teal rounded-square icon
               Container(
                 width: 48,
                 height: 48,
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
                 ),
                 child: const Icon(Icons.work, color: Colors.white, size: 24),
               ),
@@ -553,12 +789,12 @@ class _JobCard extends StatelessWidget {
                     Text(
                       job.title,
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        color: AppColors.cardInk,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       [
                         job.employer,
@@ -568,7 +804,7 @@ class _JobCard extends StatelessWidget {
                       ].join(' · '),
                       style: const TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF757575),
+                        color: AppColors.cardInkMuted,
                       ),
                     ),
                     if (job.tags.isNotEmpty) ...[
@@ -656,18 +892,17 @@ class _TagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: AppColors.primary),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: const BoxDecoration(
+        color: AppColors.cardAqua,
+        borderRadius: BorderRadius.all(Radius.circular(50)),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontSize: 11,
-          color: AppColors.primary,
-          fontWeight: FontWeight.w500,
+          color: AppColors.onPrimaryContainer,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

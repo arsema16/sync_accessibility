@@ -243,34 +243,118 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     // Watch so switching simpler wording mid-flow re-renders the current step.
     ref.watch(accessPreferencesNotifierProvider);
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: widget.flowTitle == null ? null : Text(widget.flowTitle!),
-        leading: IconButton(
-          icon: const Icon(Icons.chevron_left),
-          tooltip: AppStrings.goBack,
-          onPressed: _goBack,
+      backgroundColor: AppColors.pageGradientEnd,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildProgress(theme),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.pagePadding),
-                child: _buildStepContent(context, theme),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.sm,
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(22, 12, 22, 22),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(36)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowSoft,
+                          blurRadius: 30,
+                          offset: Offset(0, 15),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildProgress(theme),
+                        const SizedBox(height: AppSpacing.lg),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _buildStepContent(context, theme),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildNavRow(context, theme),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-            _buildNavRow(context, theme),
-          ],
+          ),
         ),
       ),
     );
   }
+
+  /// Card header: back affordance, then the flow title (or the SYNC wordmark)
+  /// centred, with a matching spacer on the right so it stays centred.
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        SizedBox(
+          width: 48,
+          height: 48,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            tooltip: AppStrings.goBack,
+            onPressed: _goBack,
+            icon: const Icon(Icons.chevron_left, size: 28),
+            color: AppColors.cardInk,
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Text(
+              widget.flowTitle ?? 'SYNC',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+                color: AppColors.cardInk,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 48),
+      ],
+    );
+  }
+
+  /// Title + hint styling shared by every step type, so all steps share the
+  /// same rhythm regardless of input type.
+  static const TextStyle _titleStyle = TextStyle(
+    fontSize: 24,
+    height: 1.2,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.5,
+    color: AppColors.cardInk,
+  );
+
+  static const TextStyle _hintStyle = TextStyle(
+    fontSize: 14,
+    height: 1.45,
+    color: AppColors.cardInkMuted,
+  );
 
   Widget _buildProgress(ThemeData theme) {
     final fraction = (_current + 1) / _total;
@@ -278,43 +362,40 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Thin teal progress bar at very top, full-width
-        disableAnimations
-            ? SizedBox(
-                height: 6,
-                child: ColoredBox(
-                  color: const Color(0xFFE0E0E0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: FractionallySizedBox(
-                      widthFactor: fraction,
-                      child: const ColoredBox(color: AppColors.primary),
+        // Rounded step progress, full card width.
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: SizedBox(
+            height: 6,
+            child: disableAnimations
+                ? ColoredBox(
+                    color: AppColors.cardTrack,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: fraction,
+                        child: const ColoredBox(color: AppColors.primary),
+                      ),
                     ),
+                  )
+                : LinearProgressIndicator(
+                    value: fraction,
+                    minHeight: 6,
+                    backgroundColor: AppColors.cardTrack,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   ),
-                ),
-              )
-            : LinearProgressIndicator(
-                value: fraction,
-                minHeight: 6,
-                backgroundColor: const Color(0xFFE0E0E0),
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pagePadding,
-            AppSpacing.sm,
-            AppSpacing.pagePadding,
-            AppSpacing.xs,
           ),
-          child: Semantics(
-            liveRegion: true,
-            label: AppStrings.stepProgress(_current + 1, _total),
-            child: Text(
-              AppStrings.stepProgressLabel(_current + 1, _total),
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF757575),
-              ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Semantics(
+          liveRegion: true,
+          label: AppStrings.stepProgress(_current + 1, _total),
+          child: Text(
+            AppStrings.stepProgressLabel(_current + 1, _total),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.cardInkMuted,
             ),
           ),
         ),
@@ -348,16 +429,14 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           header: true,
           child: Text(
             title,
-            style: theme.textTheme.headlineMedium,
+            style: _titleStyle,
           ),
         ),
         if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             hint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF757575),
-            ),
+            style: _hintStyle,
           ),
         ],
         if (_error != null) ...[
@@ -429,16 +508,14 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           header: true,
           child: Text(
             title,
-            style: theme.textTheme.headlineMedium,
+            style: _titleStyle,
           ),
         ),
         if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             hint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF757575),
-            ),
+            style: _hintStyle,
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
@@ -500,16 +577,14 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           header: true,
           child: Text(
             title,
-            style: theme.textTheme.headlineMedium,
+            style: _titleStyle,
           ),
         ),
         if (hint != null) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             hint,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF757575),
-            ),
+            style: _hintStyle,
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
@@ -529,7 +604,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
               'Listening...',
               style: TextStyle(
                 fontStyle: FontStyle.italic,
-                color: Color(0xFF757575),
+                color: AppColors.cardInkMuted,
               ),
             ),
           ),
@@ -539,8 +614,8 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
         Center(
           child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF0F0F0),
-              foregroundColor: const Color(0xFF1A1A1A),
+              backgroundColor: AppColors.cardAqua,
+              foregroundColor: AppColors.cardInk,
               elevation: 0,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(50)),
@@ -610,30 +685,34 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
   }
 
   Widget _buildNavRow(BuildContext context, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
-      child: Row(
-        children: [
-          if (_current > 0)
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(80, AppSpacing.minTapTarget),
-              ),
-              onPressed: _goBack,
-              child: Text(AppStrings.back),
-            )
-          else
-            const SizedBox.shrink(),
-          const Spacer(),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(120, AppSpacing.minTapTarget),
+    return Row(
+      children: [
+        if (_current > 0)
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(80, AppSpacing.minTapTarget),
+              backgroundColor: Colors.white,
+              foregroundColor: AppColors.cardInk,
+              side: const BorderSide(color: AppColors.cardBorder, width: 1.4),
             ),
-            onPressed: _advance,
-            child: Text(_isLast ? widget.finalStepLabel : AppStrings.next),
+            onPressed: _goBack,
+            icon: const Icon(Icons.arrow_back_ios_new, size: 14),
+            label: const Text(AppStrings.back),
+          )
+        else
+          const SizedBox.shrink(),
+        const Spacer(),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(120, AppSpacing.minTapTarget),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
           ),
-        ],
-      ),
+          onPressed: _advance,
+          icon: const Icon(Icons.arrow_forward_ios, size: 14),
+          label: Text(_isLast ? widget.finalStepLabel : AppStrings.next),
+        ),
+      ],
     );
   }
 }

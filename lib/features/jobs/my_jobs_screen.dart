@@ -9,35 +9,65 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/job_application_model.dart';
 import '../../../shared/widgets/status_view.dart';
+import '../../../shared/widgets/sync_bottom_nav.dart';
 
 /// The signed-in user's job applications, read from the `job_applications`
 /// table. Shows a sign-in prompt when there is no session yet.
-class MyJobsScreen extends ConsumerWidget {
+class MyJobsScreen extends ConsumerStatefulWidget {
   const MyJobsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyJobsScreen> createState() => _MyJobsScreenState();
+}
+
+class _MyJobsScreenState extends ConsumerState<MyJobsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Read the screen heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)('My Jobs');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.pageGradientEnd,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left, color: Color(0xFF1A1A1A)),
+          icon: const Icon(Icons.chevron_left, color: AppColors.cardInk),
           tooltip: AppStrings.goBack,
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'My Jobs',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: AppColors.cardInk,
           ),
         ),
       ),
-      body: SafeArea(child: _buildBody(context, ref, user?.id)),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(top: false, child: _buildBody(context, ref, user?.id)),
+      ),
+      bottomNavigationBar: const SyncBottomNav(currentIndex: 1),
     );
   }
 
@@ -128,11 +158,17 @@ class _ApplicationCardState extends ConsumerState<_ApplicationCard> {
     ].join(' · ');
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.all(Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowSoft,
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +181,7 @@ class _ApplicationCardState extends ConsumerState<_ApplicationCard> {
                 height: 44,
                 decoration: const BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
                 ),
                 child: const Icon(Icons.work, color: Colors.white, size: 22),
               ),
@@ -157,18 +193,18 @@ class _ApplicationCardState extends ConsumerState<_ApplicationCard> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                        color: AppColors.cardInk,
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
                         subtitle,
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF757575),
+                          color: AppColors.cardInkMuted,
                         ),
                       ),
                     ],
@@ -200,7 +236,8 @@ class _ApplicationCardState extends ConsumerState<_ApplicationCard> {
                               application.coverNote!,
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF1A1A1A),
+                                height: 1.4,
+                                color: AppColors.cardInk,
                               ),
                             ),
                           ],

@@ -9,14 +9,33 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/applicant_profile_model.dart';
 import '../../../shared/widgets/status_view.dart';
+import '../../../shared/widgets/sync_bottom_nav.dart';
 
 /// The signed-in user's stored profile.
 ///
 /// Reads the `profiles` row through [savedProfileProvider]; when none exists
 /// yet it offers to start onboarding, and "Edit profile" loads the saved row
 /// back into the onboarding draft so it can be changed and re-submitted.
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Read the screen heading aloud on arrival when read-aloud is on.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final access = ref.read(accessPreferencesNotifierProvider);
+      if (access.readAloud) {
+        ref.read(readAloudProvider)(AppStrings.sectionName);
+      }
+    });
+  }
 
   Future<void> _editProfile(
     BuildContext context,
@@ -41,55 +60,104 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text(AppStrings.sectionName)),
-        body: SafeArea(
-          child: StatusView(
-            icon: Icons.person_outline,
-            title: AppStrings.signInToContinue,
-            body: AppStrings.profileEmptyBody,
-            actionLabel: AppStrings.signInAction,
-            onAction: () => context.pushNamed(RouteNames.signIn),
+        backgroundColor: AppColors.pageGradientEnd,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            AppStrings.sectionName,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: AppColors.cardInk,
+            ),
           ),
         ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.pageGradientStart,
+                AppColors.pageGradientEnd,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: StatusView(
+              icon: Icons.person_outline,
+              title: AppStrings.signInToContinue,
+              body: AppStrings.profileEmptyBody,
+              actionLabel: AppStrings.signInAction,
+              onAction: () => context.pushNamed(RouteNames.signIn),
+            ),
+          ),
+        ),
+        bottomNavigationBar: const SyncBottomNav(currentIndex: 2),
       );
     }
 
     final profileAsync = ref.watch(savedProfileProvider(user.id));
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.sectionName)),
-      body: SafeArea(
-        child: profileAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stackTrace) => StatusView(
-            icon: Icons.cloud_off,
-            title: AppStrings.profileLoadFailed,
-            actionLabel: AppStrings.tryAgain,
-            onAction: () => ref.invalidate(savedProfileProvider(user.id)),
+      backgroundColor: AppColors.pageGradientEnd,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          AppStrings.sectionName,
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: AppColors.cardInk,
           ),
-          data: (profile) {
-            if (profile == null) {
-              return StatusView(
-                icon: Icons.person_outline,
-                title: AppStrings.profileEmptyTitle,
-                body: AppStrings.profileEmptyBody,
-                actionLabel: AppStrings.startProfile,
-                onAction: () =>
-                    context.pushNamed(RouteNames.profileReview),
-              );
-            }
-            return _ProfileDetails(
-              profile: profile,
-              onEdit: () => _editProfile(context, ref, profile),
-            );
-          },
         ),
       ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: profileAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stackTrace) => StatusView(
+              icon: Icons.cloud_off,
+              title: AppStrings.profileLoadFailed,
+              actionLabel: AppStrings.tryAgain,
+              onAction: () => ref.invalidate(savedProfileProvider(user.id)),
+            ),
+            data: (profile) {
+              if (profile == null) {
+                return StatusView(
+                  icon: Icons.person_outline,
+                  title: AppStrings.profileEmptyTitle,
+                  body: AppStrings.profileEmptyBody,
+                  actionLabel: AppStrings.startProfile,
+                  onAction: () =>
+                      context.pushNamed(RouteNames.profileReview),
+                );
+              }
+              return _ProfileDetails(
+                profile: profile,
+                onEdit: () => _editProfile(context, ref, profile),
+              );
+            },
+          ),
+        ),
+      ),
+      bottomNavigationBar: const SyncBottomNav(currentIndex: 2),
     );
   }
 }
@@ -115,45 +183,70 @@ class _ProfileDetails extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
       children: [
-        // Header: name + contact
-        Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                shape: BoxShape.circle,
+        // Header: avatar + name + contact, on its own card.
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowSoft,
+                blurRadius: 18,
+                offset: Offset(0, 8),
               ),
-              child: const Icon(
-                Icons.person,
-                color: AppColors.primary,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    contact.fullName.isEmpty
-                        ? AppStrings.notProvided
-                        : contact.fullName,
-                    style: theme.textTheme.titleLarge,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.heroStart, AppColors.heroEnd],
                   ),
-                  Text(
-                    contactLine.isEmpty
-                        ? AppStrings.notProvided
-                        : contactLine,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: AppColors.onHero,
+                  size: 28,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      contact.fullName.isEmpty
+                          ? AppStrings.notProvided
+                          : contact.fullName,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.cardInk,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      contactLine.isEmpty
+                          ? AppStrings.notProvided
+                          : contactLine,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: AppColors.cardInkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.lg),
         _Section(
           title: AppStrings.sectionSkills,
           rows: <String, String>{
@@ -255,24 +348,26 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Card(
         elevation: 0,
+        margin: EdgeInsets.zero,
+        color: Colors.white,
         shape: RoundedRectangleBorder(
-          side: const BorderSide(color: Color(0xFFE0E0E0)),
-          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.cardBorder, width: 1.2),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                   color: AppColors.primary,
                 ),
               ),
@@ -282,15 +377,15 @@ class _Section extends StatelessWidget {
                   entry.key,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF757575),
+                    color: AppColors.cardInkMuted,
                   ),
                 ),
                 Text(
                   entry.value,
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF1A1A1A),
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.cardInk,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),

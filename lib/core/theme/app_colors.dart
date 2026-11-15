@@ -88,4 +88,40 @@ class AppColors {
   static const Color onSurfaceVariantDarkHighContrast = Color(0xFFFFFFFF);
   static const Color outlineDarkHighContrast = Color(0xFFCCCCCC);
   static const Color errorDarkHighContrast = Color(0xFFFFB4AB);
+
+  // ---- Rounded-card UI ----
+  // Decorative tints for the card-based layout. Every pair below is used on a
+  // light card, so the "ink" colours are all >= 7:1 against their background.
+
+  /// Page background behind the white content cards.
+  static const Color pageGradientStart = Color(0xFFE3F2EE);
+  static const Color pageGradientEnd = Color(0xFFF8FBFA);
+
+  /// The hero / feature card gradient, with the ink that sits on it.
+  static const Color heroStart = Color(0xFFB7E7DE);
+  static const Color heroEnd = Color(0xFF4FC3B4);
+  static const Color onHero = Color(0xFF08332C);
+
+  /// Tinted content cards (kept inside the teal family).
+  static const Color cardMint = Color(0xFFB2DFDB);
+  static const Color cardAqua = Color(0xFFDFF4F0);
+  static const Color cardSlate = Color(0xFFDCE6EF);
+  static const Color cardDeep = Color(0xFF0D4F47);
+  static const Color onCardDeep = Color(0xFFFFFFFF);
+
+  /// Text and outline colours used on the white cards.
+  static const Color cardInk = Color(0xFF14151A);
+  static const Color cardInkMuted = Color(0xFF5F636B);
+  static const Color cardBorder = Color(0xFFE4E8F2);
+  static const Color cardTrack = Color(0xFFE0E1E7);
+
+  /// Soft shadows, pre-multiplied so no `withOpacity` calls are needed.
+  static const Color shadowSoft = Color(0x141B7A6E); // 8% teal
+  static const Color shadowCard = Color(0x1F14151A); // 12% ink
+  static const Color shadowHero = Color(0x2E08332C); // 18% deep teal
+
+  /// The dark floating navigation capsule.
+  static const Color navBar = Color(0xFF14151A);
+  static const Color navBarShadow = Color(0x3814151A); // 22% ink
+  static const Color navItemIdle = Color(0xB3FFFFFF); // white 70%
 }
