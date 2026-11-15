@@ -737,8 +737,9 @@ class _JobListView extends StatelessWidget {
   }
 }
 
-/// A single job listing with tag chips and an Apply action.
-class _JobCard extends StatelessWidget {
+/// A single job listing with tag chips, a read-aloud action and an Apply
+/// action.
+class _JobCard extends ConsumerWidget {
   const _JobCard({
     required this.job,
     required this.applied,
@@ -749,8 +750,20 @@ class _JobCard extends StatelessWidget {
   final bool applied;
   final VoidCallback onApply;
 
+  /// What the speaker button reads out: the same information the card
+  /// shows — title, employer, location and accommodation tags.
+  String get _spokenSummary {
+    final parts = <String>[
+      job.title,
+      job.employer,
+      if (job.location != null && job.location!.isNotEmpty) job.location!,
+      if (job.tags.isNotEmpty) 'Tags: ${job.tags.join(', ')}',
+    ];
+    return parts.join('. ');
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -823,8 +836,32 @@ class _JobCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              // Read this listing aloud — always available, whether or not
+              // the auto read-aloud preference is on (an explicit tap is
+              // itself the request).
+              Semantics(
+                button: true,
+                label: AppStrings.readJobAloud,
+                child: Tooltip(
+                  message: AppStrings.readJobAloud,
+                  child: IconButton(
+                    onPressed: () =>
+                        ref.read(readAloudProvider)(_spokenSummary),
+                    icon: const Icon(Icons.volume_up, size: 22),
+                    color: AppColors.primary,
+                    style: IconButton.styleFrom(
+                      side: const BorderSide(color: AppColors.cardBorder),
+                      shape: const CircleBorder(),
+                      minimumSize: const Size(
+                        AppSpacing.minTapTarget,
+                        AppSpacing.minTapTarget,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Spacer(),
               if (applied)
                 const _AppliedBadge()
               else

@@ -47,6 +47,7 @@ class AppStrings {
       'are shown. Nothing you tell us here is shared without your permission.';
   static const String readAloud = 'Read this screen aloud';
   static const String readAloudHint = 'Hear the welcome text spoken out loud';
+  static const String readJobAloud = 'Read this job aloud';
 
   // ---- Access preferences ----
   static const String accessPreferencesHeading = 'Your access preferences';
