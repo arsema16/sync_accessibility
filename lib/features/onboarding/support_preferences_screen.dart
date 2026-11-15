@@ -249,27 +249,41 @@ class _SupportPreferencesScreenState extends ConsumerState<SupportPreferencesScr
               padding: const EdgeInsets.all(AppSpacing.pagePadding),
               child: Row(
                 children: [
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(80, AppSpacing.minTapTarget),
-                    ),
-                    onPressed: _skip,
-                    child: const Text(AppStrings.skip),
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(120, AppSpacing.minTapTarget),
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(50)),
+                  // The two actions split the row width evenly and each
+                  // label scales down to fit its half, so the long "Skip
+                  // this step" / "Continue →" labels can never overflow
+                  // the row, whatever the font size.
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(80, AppSpacing.minTapTarget),
+                      ),
+                      onPressed: _skip,
+                      child: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(AppStrings.skip),
                       ),
                     ),
-                    onPressed: _save,
-                    child: const Text(
-                      'Continue →',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(120, AppSpacing.minTapTarget),
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(50)),
+                        ),
+                      ),
+                      onPressed: _save,
+                      child: const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'Continue →',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ),
                 ],
