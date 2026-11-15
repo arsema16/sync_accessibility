@@ -366,26 +366,6 @@ class _Message extends StatelessWidget {
   }
 }
 
-/// Explains that this build carries no Supabase credentials: accounts live
-/// only in this device's memory, so sign-in can never work after an app
-/// restart. Used by the sign-in screen — its content scrolls, so the notice
-/// never has to squeeze into the apply dialog's fixed height.
-class LocalModeBanner extends StatelessWidget {
-  const LocalModeBanner({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return _Message(
-      message: AppStrings.localAuthModeNotice,
-      icon: Icons.cloud_off,
-      color: theme.colorScheme.error,
-      background: theme.colorScheme.errorContainer,
-      foreground: theme.colorScheme.onErrorContainer,
-    );
-  }
-}
-
 /// Shows [AuthForm] in a modal dialog and resolves `true` once a session
 /// exists (the user signed in or created an account), `false` if dismissed.
 ///

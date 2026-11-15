@@ -220,13 +220,6 @@ class AppStrings {
   static const String accountExistsSignIn =
       'You already have an account. Sign in with your password to continue.';
 
-  /// Shown by the auth form when the build carries no Supabase credentials:
-  /// accounts live only in this device's memory, so sign-in can never work
-  /// after an app restart.
-  static const String localAuthModeNotice =
-      'Local mode — accounts are stored on this device only and reset when '
-      'the app closes, so sign-in will not work after a restart.';
-
   // ---- Jobs ----
   static const String jobsHeading = 'Job listings';
   static const String jobsSearchHint = 'Search for jobs...';

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sync_accessibility/core/constants/app_strings.dart';
 import 'package:sync_accessibility/core/providers/app_providers.dart';
-import 'package:sync_accessibility/features/onboarding/sign_in_screen.dart';
 import 'package:sync_accessibility/models/user_model.dart';
 import 'package:sync_accessibility/services/auth_service.dart';
 import 'package:sync_accessibility/services/service_locator.dart';
@@ -220,29 +218,5 @@ void main() {
       findsOneWidget,
     );
     expect(completed, isEmpty);
-  });
-
-  testWidgets('the sign-in screen announces when it runs without Supabase',
-      (tester) async {
-    // The real fallback service, signed out so the form (and its banner)
-    // is on screen — a mis-built APK shows the same notice.
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    final prefs = await SharedPreferences.getInstance();
-    final auth = ServiceLocator.instance.auth;
-    await auth.signOut();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: <Override>[
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          authServiceProvider.overrideWithValue(auth),
-        ],
-        child: const MaterialApp(home: SignInScreen()),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text(AppStrings.localAuthModeNotice), findsOneWidget);
-    expect(find.byType(AuthForm), findsOneWidget);
   });
 }
