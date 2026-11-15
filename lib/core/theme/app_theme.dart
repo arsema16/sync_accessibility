@@ -206,6 +206,18 @@ class AppTheme {
         contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: scheme.surface),
         behavior: SnackBarBehavior.floating,
       ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: isLight ? Colors.white : scheme.surface,
+        titleTextStyle: AppTextStyles.titleLarge.copyWith(
+          color: isLight ? const Color(0xFF1A1A1A) : scheme.onSurface,
+        ),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: isLight ? const Color(0xFF1A1A1A) : scheme.onSurface,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+        ),
+      ),
     );
   }
 

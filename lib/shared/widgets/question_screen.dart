@@ -530,6 +530,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
           focusNode: _focusNode,
           keyboardType: _step.keyboardType ?? TextInputType.text,
           textInputAction: TextInputAction.next,
+          style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             labelText: title,
             hintText: hint,
@@ -642,6 +643,7 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
             textInputAction: TextInputAction.next,
             minLines: 1,
             maxLines: 3,
+            style: TextStyle(color: theme.colorScheme.onSurface),
             decoration: InputDecoration(
               labelText: title,
               hintText: hint,

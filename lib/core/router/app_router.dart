@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/jobs/apply_job_screen.dart';
@@ -17,6 +18,19 @@ import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../models/job_model.dart';
 import '../constants/route_names.dart';
+import '../providers/app_providers.dart';
+
+/// Routes that belong to onboarding — a signed-in user should never be
+/// redirected back to these.
+const _onboardingPaths = {
+  AppRoutes.welcome,
+  AppRoutes.accessPreferences,
+  AppRoutes.contact,
+  AppRoutes.identity,
+  AppRoutes.skills,
+  AppRoutes.support,
+  AppRoutes.profileReview,
+};
 
 /// The flat route table. Extracted so tests can build a [GoRouter] with a
 /// different [GoRouter.initialLocation] against the same screens and builders.
@@ -115,7 +129,23 @@ final List<RouteBase> appRouteList = <RouteBase>[
 
 /// The app's [GoRouter]. Every onboarding screen has a named route, plus the
 /// job/application flow (listings, applications, employer postings).
-final GoRouter appRouter = GoRouter(
+GoRouter buildAppRouter(ProviderContainer container) => GoRouter(
   initialLocation: AppRoutes.welcome,
+  redirect: (context, state) {
+    final user = container.read(currentUserProvider);
+    final isOnboarding = _onboardingPaths.contains(state.matchedLocation);
+
+    // Signed-in user hitting an onboarding screen → send to jobs.
+    if (user != null && isOnboarding) {
+      return AppRoutes.jobs;
+    }
+    // Everyone else → no redirect.
+    return null;
+  },
   routes: appRouteList,
 );
+
+/// Convenience singleton used by [SyncApp]. Initialized in [main] via
+/// [buildAppRouter]. Tests that build [SyncApp] directly must call
+/// [buildAppRouter] with a test container first, or use a local router.
+GoRouter appRouter = buildAppRouter(ProviderContainer());

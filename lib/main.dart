@@ -12,15 +12,22 @@ import 'core/theme/app_spacing.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  // Connect to Supabase when SUPABASE_URL / SUPABASE_ANON_KEY were supplied
-  // (flutter run --dart-define-from-file=config.json). No-op otherwise — the
-  // service locator then falls back to local in-memory storage.
   await SupabaseBootstrap.initialize();
+
+  // Build the provider container first so the router redirect can read
+  // auth state synchronously on startup.
+  final container = ProviderContainer(
+    overrides: <Override>[
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
+
+  // Build the router with access to the container.
+  appRouter = buildAppRouter(container);
+
   runApp(
-    ProviderScope(
-      overrides: <Override>[
-        sharedPreferencesProvider.overrideWithValue(prefs),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const SyncApp(),
     ),
   );

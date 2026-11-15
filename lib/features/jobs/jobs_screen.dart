@@ -688,9 +688,11 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         focusNode: _searchFocusNode,
         onChanged: (value) => setState(() => _query = value),
         textInputAction: TextInputAction.search,
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: AppStrings.jobsSearchHint,
-          prefixIcon: const Icon(Icons.search),
+          hintStyle: const TextStyle(color: Color(0xFF9E9E9E)),
+          prefixIcon: const Icon(Icons.search, color: Color(0xFF9E9E9E)),
           // Clear button, only while there is text to clear.
           suffixIcon: _query.isEmpty
               ? null

@@ -185,6 +185,11 @@ class _AuthFormState extends ConsumerState<AuthForm> {
     final theme = Theme.of(context);
     final submitLabel = widget.submitLabel ??
         (_signUp ? AppStrings.createAccountAction : AppStrings.signInAction);
+    // Input text and icon colors — always dark on white fill regardless of
+    // theme mode (auth form always uses white fill).
+    const Color inputText = Color(0xFF1A1A1A);
+    const Color inputHint = Color(0xFF9E9E9E);
+    const Color inputIcon = Color(0xFF5F636B);
 
     return Form(
       key: _formKey,
@@ -208,26 +213,35 @@ class _AuthFormState extends ConsumerState<AuthForm> {
             textInputAction: TextInputAction.next,
             autofillHints: const <String>[AutofillHints.email],
             autocorrect: false,
+            style: const TextStyle(color: inputText),
+            cursorColor: AppColors.primary,
             decoration: InputDecoration(
               labelText: AppStrings.emailLabel,
               hintText: AppStrings.authEmailHint,
-              prefixIcon: const Icon(Icons.email_outlined),
+              labelStyle: const TextStyle(color: inputHint),
+              hintStyle: const TextStyle(color: inputHint),
+              prefixIcon: const Icon(Icons.email_outlined, color: inputIcon),
               filled: true,
-              fillColor: AppColors.pageGradientEnd,
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 2,
-                ),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFB3261E)),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFB3261E), width: 2),
               ),
             ),
             validator: _validateEmail,
@@ -241,36 +255,47 @@ class _AuthFormState extends ConsumerState<AuthForm> {
                 ? const <String>[AutofillHints.newPassword]
                 : const <String>[AutofillHints.password],
             onFieldSubmitted: (_) => _submit(),
+            style: const TextStyle(color: inputText),
+            cursorColor: AppColors.primary,
             decoration: InputDecoration(
               labelText: AppStrings.passwordLabel,
               hintText: AppStrings.passwordHint,
-              prefixIcon: const Icon(Icons.lock_outline),
+              labelStyle: const TextStyle(color: inputHint),
+              hintStyle: const TextStyle(color: inputHint),
+              prefixIcon: const Icon(Icons.lock_outline, color: inputIcon),
               filled: true,
-              fillColor: AppColors.pageGradientEnd,
+              fillColor: Colors.white,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: AppColors.cardBorder),
+                borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 2,
-                ),
+                borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFB3261E)),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: Color(0xFFB3261E), width: 2),
               ),
               suffixIcon: IconButton(
-                tooltip:
-                    _obscurePassword ? AppStrings.showPassword : AppStrings.hidePassword,
+                tooltip: _obscurePassword
+                    ? AppStrings.showPassword
+                    : AppStrings.hidePassword,
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
                 icon: Icon(
                   _obscurePassword
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
+                  color: inputIcon,
                 ),
               ),
             ),
@@ -376,28 +401,54 @@ Future<bool> showAuthPrompt(
   String? initialEmail,
   String? notice,
 }) async {
-  // Announce the prompt's title when read-aloud is on. The dialog has no
-  // initState of its own, so the title is spoken from here.
   _speakAuthPromptTitle(context);
   final signedIn = await showDialog<bool>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text(AppStrings.authPromptTitle),
-      content: SizedBox(
-        width: 360,
-        child: AuthForm(
-          initialEmail: initialEmail,
-          notice: notice,
-          onCompleted: (_) => Navigator.of(dialogContext).pop(true),
+    useRootNavigator: true,
+    builder: (dialogContext) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20)),
         ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(AppStrings.cancel),
+        backgroundColor: Colors.white,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(dialogContext).size.height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  AppStrings.authPromptTitle,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                AuthForm(
+                  initialEmail: initialEmail,
+                  notice: notice,
+                  onCompleted: (_) => Navigator.of(dialogContext).pop(true),
+                ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text(AppStrings.cancel),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ],
-    ),
+      );
+    },
   );
   return signedIn ?? false;
 }
