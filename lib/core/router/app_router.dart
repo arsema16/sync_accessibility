@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/jobs/apply_job_screen.dart';
+import '../../features/jobs/employer_job_form_screen.dart';
+import '../../features/jobs/employer_jobs_screen.dart';
 import '../../features/jobs/jobs_screen.dart';
 import '../../features/jobs/my_jobs_screen.dart';
 import '../../features/more/more_screen.dart';
@@ -12,6 +15,7 @@ import '../../features/onboarding/skills_screen.dart';
 import '../../features/onboarding/support_preferences_screen.dart';
 import '../../features/onboarding/welcome_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../models/job_model.dart';
 import '../constants/route_names.dart';
 
 /// The flat route table. Extracted so tests can build a [GoRouter] with a
@@ -84,10 +88,33 @@ final List<RouteBase> appRouteList = <RouteBase>[
     path: AppRoutes.more,
     builder: (context, state) => const MoreScreen(),
   ),
+  GoRoute(
+    name: RouteNames.employerJobs,
+    path: AppRoutes.employerJobs,
+    builder: (context, state) => const EmployerJobsScreen(),
+  ),
+  GoRoute(
+    name: RouteNames.employerJobForm,
+    path: AppRoutes.employerJobForm,
+    builder: (context, state) => EmployerJobFormScreen(
+      existing: state.extra is Job ? state.extra as Job : null,
+    ),
+  ),
+  GoRoute(
+    name: RouteNames.applyJob,
+    path: AppRoutes.applyJob,
+    builder: (context, state) => ApplyJobScreen(
+      // The jobs screen always passes the job; fall back safely if deep
+      // links omit it.
+      job: state.extra is Job
+          ? state.extra as Job
+          : const Job(id: '', title: '', employer: ''),
+    ),
+  ),
 ];
 
-/// The app's [GoRouter]. Every onboarding screen has a named route, plus stub
-/// routes for the job/application flow (Phase 2).
+/// The app's [GoRouter]. Every onboarding screen has a named route, plus the
+/// job/application flow (listings, applications, employer postings).
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.welcome,
   routes: appRouteList,
