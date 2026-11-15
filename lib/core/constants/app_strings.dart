@@ -27,7 +27,9 @@ class AppStrings {
   static const String tapToSpeak = 'Tap to record your answer by voice';
   static const String speakInstead = 'Speak instead';
   static const String listening = 'Listening…';
-  static const String voiceUnavailable = 'Voice input is not ready yet. You can type your answer.';
+  static const String voiceUnavailable = 'Voice input is not ready yet. You '
+      'can type your answer, or check that your phone lets SYNC use the '
+      'microphone.';
 
   /// Announced to screen readers as the user moves between form steps.
   static String stepProgress(int current, int total) =>
