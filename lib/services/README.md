@@ -1,35 +1,52 @@
-# SYNC service layer (stub)
+# SYNC service layer
 
-This folder defines the **abstract** service contracts used across the app and
-**in-memory** implementations that let the onboarding flow run end to end
-without a backend.
+This folder defines the **abstract** service contracts used across the app
+and their two implementations:
 
-## Why stubs?
+| Contract | Production implementation (Supabase) | Fallback implementation |
+| --- | --- | --- |
+| `AuthService` | `SupabaseAuthService` — `auth.users` via GoTrue | `InMemoryAuthService` |
+| `ProfileService` | `SupabaseProfileService` — `profiles` table | `InMemoryProfileService` |
+| `JobService` | `SupabaseJobService` — `jobs` + `job_applications` tables | `InMemoryJobService` |
 
-Phase 1 must not depend on Supabase. Arsema Tefera owns the architecture and
-onboarding; **Arsema Tewodros** owns wiring the real backend. To make that swap
-easy, every concrete implementation is marked:
+Everything goes through the riverpod providers in
+`lib/core/providers/app_providers.dart`, so no UI or state code talks to a
+concrete class directly.
 
-```dart
-// TODO(arsema-tewodros): replace InMemory* with Supabase implementation
-```
+## Which implementation runs?
 
-Each abstract class is the contract Arsema Tewodros needs to satisfy. Replace
-the `InMemory*` classes with Supabase-backed implementations; no UI or state
-code should need to change, because everything goes through the riverpod
-providers in `lib/core/providers/app_providers.dart`.
+`ServiceLocator` resolves on first access:
+
+* **Supabase** when `SupabaseBootstrap.useSupabase` is `true` — i.e. the
+  build carries `SUPABASE_URL` / `SUPABASE_ANON_KEY`
+  (`flutter run --dart-define-from-file=config.json`) *and* the client
+  initialised successfully in `main()`.
+* **In-memory** otherwise, so unit tests, `flutter analyze` and a first run
+  without `config.json` still work end to end.
+
+The two implementations behave identically, including error semantics:
+auth and profile failures throw typed exceptions (`AuthFailure`,
+`ProfileException`) carrying a message that is safe to show in the UI.
 
 ## Contracts
 
 ### `AuthService` — `lib/services/auth_service.dart`
 ```dart
-Future<SyncUser?> signUp({required String email, required String password, String? displayName});
-Future<SyncUser?> signIn({required String email, required String password});
+Future<SyncUser> signUp({required String email, required String password, String? displayName});
+Future<SyncUser> signIn({required String email, required String password});
 Future<void> signOut();
 SyncUser? get currentUser;
+Stream<SyncUser?> get authStateChanges;
 ```
-- `signUp` returns the new user, or `null` if the account already exists.
-- `signIn` returns the user, or `null` if credentials do not match.
+- Both auth calls throw `AuthFailure` on failure (bad credentials, duplicate
+  account, network down) instead of returning `null`, so the UI can show the
+  real reason.
+- `authStateChanges` emits the current session immediately, then every
+  sign-in / sign-out; the UI watches it through `authStateChangesProvider`
+  and `currentUserProvider`.
+- If the Supabase project requires email confirmation, `signUp` succeeds but
+  `currentUser` stays `null` until the address is confirmed — the auth form
+  uses that to show the "check your email" notice.
 
 ### `ProfileService` — `lib/services/profile_service.dart`
 ```dart
@@ -37,40 +54,38 @@ Future<ApplicantProfile> saveProfile(ApplicantProfile profile);
 Future<ApplicantProfile?> getProfile(String userId);
 Future<ApplicantProfile> updateProfile(ApplicantProfile profile);
 ```
-- `saveProfile` and `updateProfile` return the stored copy with `id` and
-  `updatedAt` set.
-- Profiles are keyed by `userId ?? id` so a caller without a `userId` can still
-  retrieve by the `id` returned from `saveProfile`.
+- `saveProfile`/`updateProfile` return the stored copy with `id` and
+  `updatedAt` set, upserted on `user_id`.
+- Falls back to the signed-in user when `profile.userId` is null; throws
+  `ProfileException` when nobody is signed in (RLS would reject the write).
+- Row mapping lives in `profileToRow` / `profileFromRow`
+  (`supabase_profile_service.dart`) and is unit tested.
 
-### `JobService` — `lib/services/job_service.dart` (Phase 2)
+### `JobService` — `lib/services/job_service.dart`
 ```dart
 Future<List<Job>> listJobs();
 Future<Job?> getJob(String id);
+Future<List<JobApplication>> listApplications(String userId);
+Future<JobApplication> applyToJob({required String jobId, required String userId});
+Future<void> removeApplication(String applicationId);
 ```
-- Stub only in Phase 1. Phase 2 will flesh out the job and application flow.
+- `listJobs` returns active listings newest first.
+- `applyToJob` upserts on `(user_id, job_id)` so re-applying never duplicates.
 
-## How to wire Supabase (Arsema Tewodros)
+## Database
 
-1. Add `supabase_flutter` to `pubspec.yaml`.
-2. Create `SupabaseAuthService`, `SupabaseProfileService`,
-   `SupabaseJobService` implementing the abstract classes.
-3. In `lib/services/service_locator.dart`, change the three field
-   initializers to construct the Supabase implementations.
-4. Initialise the Supabase client in `main.dart` before `runApp` and inject any
-   needed config (e.g. via a riverpod override).
+The full schema (tables, RLS policies, seed jobs) is
+[`supabase/schema.sql`](../../supabase/schema.sql); setup steps are in
+[`supabase/README.md`](../../supabase/README.md).
 
-No other file should need editing, because everything else consumes the
-abstract types through the service locator / providers.
+## Injected capabilities (not backend)
 
-## Injected capabilities (not backend, but stubbed for the same reason)
+Two capabilities are device APIs rather than backend calls:
 
-Two capabilities are stubbed for a teammate to implement later:
-
-- **Voice input** (`VoiceInputCallback`): a mic button calls this. The stub
-  returns an empty string. **Bethel** wires the real speech-recognition API.
-- **Read aloud** (`ReadAloudCallback`): the Welcome "read aloud" button calls
-  this. The stub is a no-op. **Bethel** wires the real text-to-speech API.
+- **Voice input** (`VoiceInputCallback`): a mic button calls this. Backed by
+  `speech_to_text`.
+- **Read aloud** (`ReadAloudCallback`): the Welcome "read aloud" button
+  calls this. Backed by `flutter_tts`.
 
 Both are defined in `lib/core/access/access_callbacks.dart` and exposed as
-riverpod providers in `app_providers.dart`, so they can be overridden the same
-way as the services.
+riverpod providers in `app_providers.dart`.

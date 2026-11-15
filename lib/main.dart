@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/config/supabase_config.dart';
 import 'core/constants/app_strings.dart';
 import 'core/providers/app_providers.dart';
 import 'core/router/app_router.dart';
@@ -11,6 +12,10 @@ import 'core/theme/app_spacing.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  // Connect to Supabase when SUPABASE_URL / SUPABASE_ANON_KEY were supplied
+  // (flutter run --dart-define-from-file=config.json). No-op otherwise — the
+  // service locator then falls back to local in-memory storage.
+  await SupabaseBootstrap.initialize();
   runApp(
     ProviderScope(
       overrides: <Override>[

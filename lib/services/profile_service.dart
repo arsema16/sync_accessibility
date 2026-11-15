@@ -1,9 +1,16 @@
 import '../models/applicant_profile_model.dart';
 
 /// Applicant profile storage contract.
+///
+/// The Supabase implementation (`SupabaseProfileService`) persists to the
+/// `profiles` table; `InMemoryProfileService` remains as a local fallback for
+/// tests and unconfigured builds.
 abstract class ProfileService {
   /// Persists a profile (creating or replacing it) and returns the stored
   /// copy, with [ApplicantProfile.id] and [ApplicantProfile.updatedAt] set.
+  ///
+  /// When [ApplicantProfile.userId] is null the implementation falls back to
+  /// the signed-in user. Throws [ProfileException] when no user is available.
   Future<ApplicantProfile> saveProfile(ApplicantProfile profile);
 
   /// Returns the profile for [userId], or `null` if none is stored.
@@ -13,12 +20,20 @@ abstract class ProfileService {
   Future<ApplicantProfile> updateProfile(ApplicantProfile profile);
 }
 
+/// A typed profile-storage failure with a message safe to show to the user.
+class ProfileException implements Exception {
+  const ProfileException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 /// Local in-memory implementation of [ProfileService].
 ///
 /// Profiles are keyed by `userId ?? id` so callers without a userId can still
 /// retrieve by the id returned from [saveProfile].
-///
-// TODO(arsema-tewodros): replace InMemoryProfileService with Supabase implementation.
 class InMemoryProfileService implements ProfileService {
   final Map<String, ApplicantProfile> _store = <String, ApplicantProfile>{};
   int _nextId = 0;

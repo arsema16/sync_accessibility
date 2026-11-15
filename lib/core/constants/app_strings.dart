@@ -25,6 +25,7 @@ class AppStrings {
 
   // ---- Accessibility helper text ----
   static const String tapToSpeak = 'Tap to record your answer by voice';
+  static const String speakInstead = 'Speak instead';
   static const String listening = 'Listening…';
   static const String voiceUnavailable = 'Voice input is not ready yet. You can type your answer.';
 
@@ -77,6 +78,14 @@ class AppStrings {
   static const String emailQuestion = 'What is your email? (optional)';
   static const String emailHint = 'Leave this blank if you do not have one.';
 
+  // Simpler-wording variants (Access Passport → "Use simpler wording").
+  static const String fullNameQuestionSimple = 'What is your name?';
+  static const String fullNameHintSimple = 'Your name.';
+  static const String phoneQuestionSimple = 'What number can we call?';
+  static const String phoneHintSimple = 'Your phone number.';
+  static const String emailQuestionSimple = 'Your email (you can skip this).';
+  static const String emailHintSimple = 'No email? Skip this.';
+
   // ---- Identity route ----
   static const String identityHeading = 'How would you like to verify your identity?';
   static const String identityHint =
@@ -93,6 +102,8 @@ class AppStrings {
   static const String identityPartner = 'Refer me through a partner';
   static const String identityPartnerDesc =
       'A trusted partner organisation helps verify your identity.';
+  static const String identityHeadingSimple = 'How do you want to prove who you are?';
+  static const String identityHintSimple = 'Pick one. You can change it later.';
 
   // ---- Skills ----
   static const String skillsFlowTitle = 'Tell us about your experience';
@@ -110,6 +121,16 @@ class AppStrings {
   static const String languagesQuestion = 'Which languages do you speak?';
   static const String languagesHint = 'Separate them with commas, or speak them.';
 
+  // Simpler-wording variants for the skills steps.
+  static const String occupationQuestionSimple = 'What work do you do now?';
+  static const String occupationHintSimple = 'For example: farm, shop, teach.';
+  static const String educationQuestionSimple = 'What is the last school you finished?';
+  static const String educationHintSimple = 'Tap the one that fits.';
+  static const String keySkillsQuestionSimple = 'What are you good at?';
+  static const String keySkillsHintSimple = 'Say or type them.';
+  static const String languagesQuestionSimple = 'What languages do you speak?';
+  static const String languagesHintSimple = 'Say or type them.';
+
   // ---- Support preferences ----
   static const String supportHeading = 'Your support preferences';
   static const String supportPrivacy =
@@ -119,6 +140,11 @@ class AppStrings {
   static const String supportRemote = 'Remote interview';
   static const String supportOther = 'Other';
   static const String supportOtherHint = 'Tell us what would help.';
+  static const String supportHeadingSimple = 'What would help you?';
+  static const String supportSubtitle =
+      'Select any options that make applying or interviewing easier.';
+  static const String supportSubtitleSimple =
+      'Tap what makes it easier for you.';
 
   // ---- Profile review ----
   static const String profileReviewHeading = 'Review your profile';
@@ -151,10 +177,149 @@ class AppStrings {
   static String editSectionHint(String section) =>
       'Double tap to change your $section.';
 
-  // ---- Stub screens (Phase 2) ----
-  static const String jobsHeading = 'Job listings';
-  static const String jobsStubBody = 'Job listings are coming soon.';
+  // ---- Account / authentication ----
   static const String signInHeading = 'Sign in';
-  static const String signInStubBody = 'Sign in is coming soon.';
-  static const String profileStubBody = 'Profile management is coming in Phase 2.';
+  static const String signInSubtitle =
+      'Sign in to keep your profile and applications in sync.';
+  static const String createAccountHeading = 'Create your account';
+  static const String createAccountSubtitle =
+      'One account keeps your profile and applications safe.';
+  static const String emailLabel = 'Email address';
+  static const String authEmailHint = 'The email you use to sign in.';
+  static const String passwordLabel = 'Password';
+  static const String passwordHint = 'At least 6 characters.';
+  static const String showPassword = 'Show password';
+  static const String hidePassword = 'Hide password';
+  static const String signInAction = 'Sign in';
+  static const String createAccountAction = 'Create account';
+  static const String switchToSignUp = 'Create a new account';
+  static const String passwordTooShort =
+      'Please choose a password of at least 6 characters.';
+  static const String authFailed =
+      'Something went wrong. Please try again.';
+  static const String authPromptTitle = 'Sign in to continue';
+  static const String cancel = 'Cancel';
+  static String signedInAs(String email) => 'Signed in as $email';
+  static const String notSignedIn = 'Not signed in';
+  static const String signInToContinue = 'Sign in to sync your profile.';
+  static const String continueToJobs = 'Continue to jobs';
+  static const String signOut = 'Sign out';
+  static const String signedOutMessage = 'You have been signed out.';
+  static String confirmationSent(String email) =>
+      'We sent a confirmation email to $email. Open it to confirm your '
+      'account, then sign in here.';
+
+  // ---- Jobs ----
+  static const String jobsHeading = 'Job listings';
+  static const String jobsSearchHint = 'Search for jobs...';
+  static const String jobsEmptyTitle = 'No jobs found';
+  static const String jobsEmptyBody =
+      'Try a different search or filter.';
+  static const String jobsLoadFailed =
+      'Could not load jobs. Please try again.';
+  static const String apply = 'Apply';
+  static const String applied = 'Applied';
+  static const String applicationSent = 'Application sent.';
+  static const String applicationFailed =
+      'Could not send your application. Please try again.';
+  static const String withdraw = 'Withdraw';
+  static const String applicationWithdrawn = 'Application withdrawn.';
+  static String signInToApply(String title) =>
+      'Sign in to apply for $title.';
+  static const String myJobsEmptyTitle = 'No applications yet';
+  static const String myJobsEmptyBody =
+      'Jobs you apply for will appear here.';
+  static const String signInToSeeApplications =
+      'Sign in to see your applications.';
+  static const String tryAgain = 'Try again';
+
+  // ---- Support-needs job filter (private, matched locally) ----
+  static const String filterMySupport = 'My support';
+  static const String supportFilterUnavailableTitle =
+      'Sign in to filter by your support needs';
+  static const String supportFilterUnavailableBody =
+      'This filter matches your private support preferences against job '
+      'accommodations. It stays on your side — employers never see it.';
+  static const String supportFilterNoPrefsTitle =
+      'No support preferences saved yet';
+  static const String supportFilterNoPrefsBody =
+      'Add what would help you in your profile, then this filter will find '
+      'jobs that offer it.';
+  static const String supportFilterEditPrefs = 'Edit support preferences';
+  static const String supportFilterEmptyTitle = 'No jobs match your needs yet';
+  static const String supportFilterEmptyBody =
+      'Nothing in the current listings offers everything you asked for. '
+      'Try removing a filter to see more jobs.';
+  static const String supportFilterMatchedHint =
+      'Jobs that offer the support you asked for.';
+
+  // ---- Employer job form ----
+  static const String employerJobsTitle = 'My job postings';
+  static const String employerJobsEmptyTitle = 'No jobs posted yet';
+  static const String employerJobsEmptyBody =
+      'Post a job with the accommodations it offers so the right people can '
+      'find it.';
+  static const String employerSignInTitle = 'Sign in to manage your jobs';
+  static const String employerSignInBody =
+      'Job postings are tied to your account so only you can edit them.';
+  static const String employerPostJob = 'Post a job';
+  static const String employerEditJob = 'Edit job';
+  static const String employerJobSaved = 'Job saved.';
+  static const String employerJobSaveFailed =
+      'Could not save the job. Please try again.';
+  static const String employerJobDelete = 'Delete';
+  static const String employerJobDeleted = 'Job deleted.';
+  static const String employerJobTitleLabel = 'Job title';
+  static const String employerJobTitleHint = 'For example: Warehouse assistant.';
+  static const String employerJobTitleSimple = 'What is the job called?';
+  static const String employerJobEmployerLabel = 'Organisation name';
+  static const String employerJobEmployerHint = 'The company or group hiring.';
+  static const String employerJobEmployerSimple = 'Who is hiring?';
+  static const String employerJobLocationLabel = 'Location';
+  static const String employerJobLocationHint =
+      'City, or "Remote" if there is no office.';
+  static const String employerJobLocationSimple = 'Where is the job?';
+  static const String employerJobDescriptionLabel = 'What the job involves';
+  static const String employerJobDescriptionHint =
+      'A short description of the work.';
+  static const String employerJobDescriptionSimple = 'What will they do?';
+  static const String employerJobAccommodationsLabel =
+      'What does this job offer?';
+  static const String employerJobAccommodationsHint =
+      'Pick everything the job provides. Job seekers filter by these.';
+  static const String employerJobAccommodationsSimple =
+      'What does the job give?';
+  static const String employerJobDeleteConfirm =
+      'Delete this job posting? This cannot be undone.';
+
+  // ---- Job application flow (voice answers) ----
+  static const String applyFlowTitle = 'Apply';
+  static const String applyWhyQuestion = 'Why do you want this job?';
+  static const String applyWhyHint =
+      'A short note the employer will read with your application.';
+  static const String applyWhySimple = 'Why do you want this job?';
+  static const String applyWhyHintSimple = 'Say it or type it.';
+  static const String applyExperienceQuestion =
+      'What experience would you bring?';
+  static const String applyExperienceHint =
+      'For example: years, skills, or similar work.';
+  static const String applyExperienceSimple = 'What can you do?';
+  static const String applyExperienceHintSimple = 'Say it or type it.';
+  static const String applyAnswersPrivateNote =
+      'Your answers go only to this employer with your application.';
+  static const String myAnswerLabel = 'Your answers';
+
+  // ---- Profile ----
+  static const String profileEmptyTitle = 'No profile yet';
+  static const String profileEmptyBody =
+      'Complete onboarding once and your profile is saved here.';
+  static const String startProfile = 'Start your profile';
+  static const String editProfile = 'Edit profile';
+  static const String profileLoadFailed =
+      'Could not load your profile. Please try again.';
+  static const String profileSubmitFailed =
+      'Could not submit your application. Please try again.';
+  static const String authPromptForSubmit =
+      'Create an account to submit your application. We keep your details '
+      'private.';
 }

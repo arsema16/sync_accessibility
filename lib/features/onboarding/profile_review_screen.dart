@@ -8,6 +8,8 @@ import '../../../core/providers/app_providers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../models/applicant_profile_model.dart';
+import '../../../services/profile_service.dart';
+import '../../../shared/widgets/auth_form.dart';
 
 String _identityLabel(IdentityRoute route) {
   switch (route) {
@@ -54,8 +56,9 @@ List<String> _supportSummary(PrivateSupport? s) {
 }
 
 /// Shows everything the user entered, grouped by section, with an Edit link per
-/// section. "Save profile" persists via the profile service stub and shows a
-/// completion state.
+/// section. "Save profile" persists via the profile service and shows a
+/// completion state. If nobody is signed in yet, an account prompt appears
+/// first so the profile has an owner on the backend.
 class ProfileReviewScreen extends ConsumerStatefulWidget {
   const ProfileReviewScreen({super.key});
 
@@ -69,18 +72,55 @@ class _ProfileReviewScreenState extends ConsumerState<ProfileReviewScreen> {
   bool _saved = false;
 
   Future<void> _saveProfile() async {
+    // Resolve the account first (prompting if needed) so the button only
+    // shows "saving" while a save is genuinely in flight.
+    final auth = ref.read(authServiceProvider);
+    var user = auth.currentUser;
+    if (user == null) {
+      final draftEmail = ref.read(onboardingDraftProvider).contact.email;
+      final signedIn = await showAuthPrompt(
+        context,
+        initialEmail: draftEmail,
+        notice: AppStrings.authPromptForSubmit,
+      );
+      if (!mounted) return;
+      user = auth.currentUser;
+      if (!signedIn || user == null) {
+        // Dismissed, or the account still needs email confirmation.
+        return;
+      }
+    }
+
     setState(() => _saving = true);
+
     final draft = ref.read(onboardingDraftProvider);
     final access = ref.read(accessPreferencesNotifierProvider);
-    final profile = draft.copyWith(accessPassport: access);
-    await ref.read(profileServiceProvider).saveProfile(profile);
-    if (!mounted) {
-      return;
+    final profile = draft.copyWith(accessPassport: access, userId: user.id);
+
+    try {
+      final saved =
+          await ref.read(profileServiceProvider).saveProfile(profile);
+      if (!mounted) return;
+      // Keep the draft aligned with the stored row (id, updatedAt) so a
+      // later edit from the Profile screen round-trips cleanly.
+      ref.read(onboardingDraftProvider.notifier).replace(saved);
+      setState(() {
+        _saving = false;
+        _saved = true;
+      });
+    } on ProfileException catch (failure) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(failure.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.profileSubmitFailed)),
+      );
     }
-    setState(() {
-      _saving = false;
-      _saved = true;
-    });
   }
 
   @override

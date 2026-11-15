@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/applicant_profile_model.dart';
+import '../../models/job_application_model.dart';
+import '../../models/job_model.dart';
+import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/job_service.dart';
 import '../../services/profile_service.dart';
@@ -33,6 +36,45 @@ final profileServiceProvider = Provider<ProfileService>(
 
 final jobServiceProvider = Provider<JobService>(
   (ref) => ref.read(serviceLocatorProvider).jobs,
+);
+
+/// Emits the signed-in user immediately, then every sign-in / sign-out.
+final authStateChangesProvider = StreamProvider<SyncUser?>(
+  (ref) => ref.watch(authServiceProvider).authStateChanges,
+);
+
+/// The signed-in user, or `null`. Rebuilds whenever the session changes.
+final currentUserProvider = Provider<SyncUser?>((ref) {
+  final auth = ref.watch(authServiceProvider);
+  return ref.watch(authStateChangesProvider).valueOrNull ?? auth.currentUser;
+});
+
+/// All open job listings, refreshed with `ref.invalidate(jobsProvider)`.
+final jobsProvider = FutureProvider<List<Job>>(
+  (ref) => ref.watch(jobServiceProvider).listJobs(),
+);
+
+/// The signed-in user's job applications (empty while signed out).
+final jobApplicationsProvider = FutureProvider<List<JobApplication>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    return Future<List<JobApplication>>.value(const <JobApplication>[]);
+  }
+  return ref.watch(jobServiceProvider).listApplications(user.id);
+});
+
+/// Job listings posted by the signed-in user (empty while signed out).
+final employerJobsProvider = FutureProvider<List<Job>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    return Future<List<Job>>.value(const <Job>[]);
+  }
+  return ref.watch(jobServiceProvider).listJobsForEmployer(user.id);
+});
+
+/// The stored profile for the given user id, or `null` when none is saved.
+final savedProfileProvider = FutureProvider.family<ApplicantProfile?, String>(
+  (ref, userId) => ref.watch(profileServiceProvider).getProfile(userId),
 );
 
 /// Voice input capability backed by the device speech recogniser.
@@ -119,6 +161,11 @@ class OnboardingDraftNotifier extends Notifier<ApplicantProfile> {
   void setSkills(SkillsInfo skills) => _persist(state.copyWith(skills: skills));
   void setPrivateSupport(PrivateSupport? support) =>
       _persist(state.copyWith(privateSupport: support));
+
+  /// Replaces the whole draft — used when the Profile screen loads a saved
+  /// profile back into the flow for editing.
+  void replace(ApplicantProfile profile) => _persist(profile);
+
   void reset() {
     // Reset in-memory state only. Do not write to disk — there is no resume
     // path from WelcomeScreen, so persisting an empty draft would silently
