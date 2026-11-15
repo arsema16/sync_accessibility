@@ -671,7 +671,6 @@ class _QuestionScreenState extends ConsumerState<QuestionScreen> {
     return Semantics(
       liveRegion: true,
       container: true,
-      label: _error,
       child: Padding(
         padding: const EdgeInsets.only(top: AppSpacing.sm),
         child: Row(

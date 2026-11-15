@@ -57,13 +57,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             ),
           ),
           // Decorative teal shapes behind the card
-          Positioned(top: -40, right: -30, child: _WelcomeShapes()),
+          Positioned(top: -40, right: -30, child: ExcludeSemantics(child: _WelcomeShapes())),
           // City skyline silhouette at the bottom
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: _SkylineSilhouette(screenWidth: size.width),
+            child: ExcludeSemantics(child: _SkylineSilhouette(screenWidth: size.width)),
           ),
           // Scrollable content overlay
           SafeArea(
@@ -96,9 +96,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Logo: teal gradient circle with a mic, matching
-                            // the launcher icon.
+                            // the launcher icon. Decorative — the SYNC wordmark
+                            // below is the accessible label.
                             Center(
-                              child: Container(
+                              child: ExcludeSemantics(
+                                child: Container(
                                 width: 88,
                                 height: 88,
                                 alignment: Alignment.center,
@@ -118,6 +120,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   size: 44,
                                   color: Colors.white,
                                 ),
+                              ),
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xl),

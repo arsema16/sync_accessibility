@@ -750,8 +750,9 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       button: true,
       selected: selected,
       label: _filters[index],
-      child: GestureDetector(
+      child: InkWell(
         onTap: () => setState(() => _selectedFilter = index),
+        borderRadius: BorderRadius.circular(50),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
