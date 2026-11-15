@@ -218,6 +218,12 @@ class AppStrings {
   // ---- Jobs ----
   static const String jobsHeading = 'Job listings';
   static const String jobsSearchHint = 'Search for jobs...';
+
+  /// Hint in the home search bar — it also accepts spoken queries.
+  static const String jobsVoiceSearchHint = 'Apply with voice';
+
+  /// Tooltip for the search bar's mic button (speak → search).
+  static const String jobsVoiceSearch = 'Search by voice';
   static const String jobsEmptyTitle = 'No jobs found';
   static const String jobsEmptyBody =
       'Try a different search or filter.';

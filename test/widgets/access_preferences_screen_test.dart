@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:sync_accessibility/core/constants/app_strings.dart';
 import 'package:sync_accessibility/core/providers/app_providers.dart';
 import 'package:sync_accessibility/features/onboarding/access_preferences_screen.dart';
+import 'package:sync_accessibility/shared/widgets/sync_option_card.dart';
 
 void main() {
-  testWidgets('tapping a preference chip selects it', (tester) async {
+  testWidgets('tapping a preference card selects it', (tester) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
 
@@ -21,21 +21,24 @@ void main() {
       ),
     );
 
-    final labelFinder = find.text(AppStrings.largerText);
+    final labelFinder = find.text('Large Text');
     expect(labelFinder, findsOneWidget);
 
-    final chipFinder = find.ancestor(of: labelFinder, matching: find.byType(FilterChip));
-    expect(chipFinder, findsOneWidget);
+    final cardFinder = find.ancestor(
+      of: labelFinder,
+      matching: find.byType(SyncOptionCard),
+    );
+    expect(cardFinder, findsOneWidget);
 
-    expect(tester.widget<FilterChip>(chipFinder).selected, isFalse);
+    expect(tester.widget<SyncOptionCard>(cardFinder).selected, isFalse);
 
-    // The chip may sit below the fold in the scroll view; bring it on-screen.
-    await tester.ensureVisible(chipFinder);
+    // The card may sit below the fold in the scroll view; bring it on-screen.
+    await tester.ensureVisible(cardFinder);
     await tester.pumpAndSettle();
 
-    await tester.tap(chipFinder);
+    await tester.tap(cardFinder);
     await tester.pump();
 
-    expect(tester.widget<FilterChip>(chipFinder).selected, isTrue);
+    expect(tester.widget<SyncOptionCard>(cardFinder).selected, isTrue);
   });
 }

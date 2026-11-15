@@ -113,44 +113,7 @@ class _AccessPreferencesScreenState
                             color: AppColors.cardInkMuted,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        // Hidden functional FilterChips retained for test compatibility.
-                        // They are transparent but remain hit-testable so existing
-                        // widget tests that locate them by type can still drive state.
-                        Opacity(
-                          opacity: 0,
-                          child: Wrap(
-                            spacing: AppSpacing.sm,
-                            runSpacing: AppSpacing.sm,
-                            children: [
-                              FilterChip(
-                                label: Text(AppStrings.readAloudPref),
-                                selected: access.readAloud,
-                                onSelected: notifier.setReadAloud,
-                              ),
-                              FilterChip(
-                                label: Text(AppStrings.simplerWording),
-                                selected: access.simplerWording,
-                                onSelected: notifier.setSimplerWording,
-                              ),
-                              FilterChip(
-                                label: Text(AppStrings.largerText),
-                                selected: access.largerText,
-                                onSelected: notifier.setLargerText,
-                              ),
-                              FilterChip(
-                                label: Text(AppStrings.strongerContrast),
-                                selected: access.strongerContrast,
-                                onSelected: notifier.setStrongerContrast,
-                              ),
-                              FilterChip(
-                                label: Text(AppStrings.extraTime),
-                                selected: access.extraTime,
-                                onSelected: notifier.setExtraTime,
-                              ),
-                            ],
-                          ),
-                        ),
+                        const SizedBox(height: AppSpacing.md),
                         // Visible SyncOptionCard rows
                         SyncOptionCard(
                           icon: Icons.mic_none,

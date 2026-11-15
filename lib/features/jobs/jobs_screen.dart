@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/access/access_callbacks.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
@@ -26,6 +27,15 @@ import '../../../shared/widgets/sync_bottom_nav.dart';
 class JobsScreen extends ConsumerStatefulWidget {
   const JobsScreen({super.key});
 
+  /// Time-of-day greeting shown in the header (and read aloud on arrival):
+  /// morning before noon, afternoon until 17:00, evening after that.
+  static String greetingFor(DateTime time) {
+    final hour = time.hour;
+    if (hour < 12) return 'Good morning!';
+    if (hour < 17) return 'Good afternoon!';
+    return 'Good evening!';
+  }
+
   @override
   ConsumerState<JobsScreen> createState() => _JobsScreenState();
 }
@@ -33,6 +43,8 @@ class JobsScreen extends ConsumerStatefulWidget {
 class _JobsScreenState extends ConsumerState<JobsScreen> {
   int _selectedFilter = 0;
   String _query = '';
+  /// True while the mic-driven voice search is listening.
+  bool _voiceListening = false;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
@@ -65,7 +77,8 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
       final access = ref.read(accessPreferencesNotifierProvider);
       if (access.readAloud) {
         ref.read(readAloudProvider)(
-          'Good morning! Discover jobs that fit your needs.',
+          '${JobsScreen.greetingFor(DateTime.now())} '
+          'Discover jobs that fit your needs.',
         );
       }
     });
@@ -103,6 +116,15 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         job.employer.toLowerCase().contains(query) ||
         (job.location?.toLowerCase().contains(query) ?? false) ||
         job.tags.any((tag) => tag.toLowerCase().contains(query));
+  }
+
+  /// Resets the category filter and search box back to the full listing.
+  void _clearFilters() {
+    setState(() {
+      _selectedFilter = 0;
+      _query = '';
+      _searchController.clear();
+    });
   }
 
   /// Ensures a session exists (prompting sign-in if not) and returns the user
@@ -156,27 +178,29 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
             colors: [AppColors.pageGradientStart, AppColors.pageGradientEnd],
           ),
         ),
-        child: Column(
-          children: [
+        // The whole screen — header, search, tip, filters and job cards —
+        // scrolls as one, so the listings start at the top of the scroll
+        // content and everything above moves aside as the user scrolls.
+        child: CustomScrollView(
+          slivers: [
             // Greeting header (no AppBar)
-            _buildHeader(),
+            SliverToBoxAdapter(child: _buildHeader()),
+            // Search bar with voice input — above the tip card
+            SliverToBoxAdapter(child: _buildSearchBar()),
             // Hero accessibility tip with a built-in read-aloud action
-            _buildTipCard(),
-            // Search bar
-            _buildSearchBar(),
+            SliverToBoxAdapter(child: _buildTipCard()),
             // Filter chips
-            _buildFilterRow(),
-            // Job cards list (or the support-filter guidance states)
-            Expanded(
-              child: supportFilterOn
-                  ? _buildSupportFilterBody(
-                      context,
-                      jobsAsync,
-                      profileAsync,
-                      user != null,
-                    )
-                  : _buildJobsBody(jobsAsync, appliedJobIds),
-            ),
+            SliverToBoxAdapter(child: _buildFilterRow()),
+            // Job cards (or the support-filter guidance states)
+            if (supportFilterOn)
+              ..._buildSupportFilterSlivers(
+                context,
+                jobsAsync,
+                profileAsync,
+                user != null,
+              )
+            else
+              ..._buildJobsSlivers(jobsAsync, appliedJobIds),
           ],
         ),
       ),
@@ -184,111 +208,164 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
-  /// Standard listings + search + tag filters.
-  Widget _buildJobsBody(
+  /// Standard listings + search + tag filters, as scrollable slivers so the
+  /// cards share one scroll position with the header and search above them.
+  List<Widget> _buildJobsSlivers(
     AsyncValue<List<Job>> jobsAsync,
     Set<String> appliedJobIds,
   ) {
     return jobsAsync.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: CircularProgressIndicator(),
+      loading: () => <Widget>[
+        const SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(AppSpacing.xl),
+              child: CircularProgressIndicator(),
+            ),
+          ),
         ),
-      ),
-      error: (error, stackTrace) => StatusView(
-        icon: Icons.cloud_off,
-        title: AppStrings.jobsLoadFailed,
-        actionLabel: AppStrings.tryAgain,
-        onAction: () => ref.invalidate(jobsProvider),
-      ),
+      ],
+      error: (error, stackTrace) => <Widget>[
+        SliverToBoxAdapter(
+          child: StatusView(
+            icon: Icons.cloud_off,
+            title: AppStrings.jobsLoadFailed,
+            actionLabel: AppStrings.tryAgain,
+            onAction: () => ref.invalidate(jobsProvider),
+          ),
+        ),
+      ],
       data: (jobs) {
         final visible = jobs
             .where((job) => _matchesFilter(job) && _matchesQuery(job))
             .toList();
         if (visible.isEmpty) {
-          return StatusView(
-            icon: Icons.search_off,
-            title: AppStrings.jobsEmptyTitle,
-            body: AppStrings.jobsEmptyBody,
-            actionLabel: AppStrings.tryAgain,
-            onAction: () {
-              setState(() {
-                _selectedFilter = 0;
-                _query = '';
-                _searchController.clear();
-              });
-            },
-          );
+          return <Widget>[
+            SliverToBoxAdapter(
+              child: StatusView(
+                icon: Icons.search_off,
+                title: AppStrings.jobsEmptyTitle,
+                body: AppStrings.jobsEmptyBody,
+                actionLabel: AppStrings.tryAgain,
+                onAction: _clearFilters,
+              ),
+            ),
+          ];
         }
-        return _JobListView(
-          jobs: visible,
-          appliedJobIds: appliedJobIds,
-          onApply: _apply,
-        );
+        return [_jobCardsSliver(visible, appliedJobIds)];
       },
     );
   }
 
+  /// The job cards as one sliver that scrolls together with the header,
+  /// search bar, tip card and filters above it.
+  Widget _jobCardsSliver(List<Job> jobs, Set<String> appliedJobIds) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.pagePadding,
+        vertical: AppSpacing.sm,
+      ),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final job = jobs[index];
+            return _JobCard(
+              job: job,
+              applied: appliedJobIds.contains(job.id),
+              onApply: () => _apply(job),
+            );
+          },
+          childCount: jobs.length,
+        ),
+      ),
+    );
+  }
+
   /// The private "support I need" filter: guides the user when no profile or
-  /// preferences are available, otherwise matches jobs on-device.
-  Widget _buildSupportFilterBody(
+  /// preferences are available, otherwise matches jobs on-device. Returns
+  /// slivers so the guidance states and cards share the screen's scroll view.
+  List<Widget> _buildSupportFilterSlivers(
     BuildContext context,
     AsyncValue<List<Job>> jobsAsync,
     AsyncValue<ApplicantProfile?>? profileAsync,
     bool signedIn,
   ) {
     if (!signedIn) {
-      return StatusView(
-        icon: Icons.lock_outline,
-        title: AppStrings.supportFilterUnavailableTitle,
-        body: AppStrings.supportFilterUnavailableBody,
-        actionLabel: AppStrings.signInAction,
-        onAction: () => context.pushNamed(RouteNames.signIn),
-      );
+      return <Widget>[
+        SliverToBoxAdapter(
+          child: StatusView(
+            icon: Icons.lock_outline,
+            title: AppStrings.supportFilterUnavailableTitle,
+            body: AppStrings.supportFilterUnavailableBody,
+            actionLabel: AppStrings.signInAction,
+            onAction: () => context.pushNamed(RouteNames.signIn),
+          ),
+        ),
+      ];
     }
     return profileAsync!.when(
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.xl),
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      error: (error, stackTrace) => StatusView(
-        icon: Icons.cloud_off,
-        title: AppStrings.profileLoadFailed,
-        actionLabel: AppStrings.tryAgain,
-        onAction: () => ref.invalidate(
-          savedProfileProvider(ref.read(currentUserProvider)!.id),
-        ),
-      ),
-      data: (profile) {
-        final support = profile?.privateSupport;
-        if (support == null) {
-          return StatusView(
-            icon: Icons.lock_outline,
-            title: AppStrings.supportFilterNoPrefsTitle,
-            body: AppStrings.supportFilterNoPrefsBody,
-            actionLabel: AppStrings.supportFilterEditPrefs,
-            onAction: () => context.pushNamed(
-              RouteNames.support,
-              extra: true, // editMode: returns here after saving
-            ),
-          );
-        }
-        final requiredTags = requiredTagsFor(support);        return jobsAsync.when(
-          loading: () => const Center(
+      loading: () => <Widget>[
+        const SliverToBoxAdapter(
+          child: Center(
             child: Padding(
               padding: EdgeInsets.all(AppSpacing.xl),
               child: CircularProgressIndicator(),
             ),
           ),
-          error: (error, stackTrace) => StatusView(
+        ),
+      ],
+      error: (error, stackTrace) => <Widget>[
+        SliverToBoxAdapter(
+          child: StatusView(
             icon: Icons.cloud_off,
-            title: AppStrings.jobsLoadFailed,
+            title: AppStrings.profileLoadFailed,
             actionLabel: AppStrings.tryAgain,
-            onAction: () => ref.invalidate(jobsProvider),
+            onAction: () => ref.invalidate(
+              savedProfileProvider(ref.read(currentUserProvider)!.id),
+            ),
           ),
+        ),
+      ],
+      data: (profile) {
+        final support = profile?.privateSupport;
+        if (support == null) {
+          return <Widget>[
+            SliverToBoxAdapter(
+              child: StatusView(
+                icon: Icons.lock_outline,
+                title: AppStrings.supportFilterNoPrefsTitle,
+                body: AppStrings.supportFilterNoPrefsBody,
+                actionLabel: AppStrings.supportFilterEditPrefs,
+                onAction: () => context.pushNamed(
+                  RouteNames.support,
+                  extra: true, // editMode: returns here after saving
+                ),
+              ),
+            ),
+          ];
+        }
+        final requiredTags = requiredTagsFor(support);
+        return jobsAsync.when(
+          loading: () => <Widget>[
+            const SliverToBoxAdapter(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(AppSpacing.xl),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+          ],
+          error: (error, stackTrace) => <Widget>[
+            SliverToBoxAdapter(
+              child: StatusView(
+                icon: Icons.cloud_off,
+                title: AppStrings.jobsLoadFailed,
+                actionLabel: AppStrings.tryAgain,
+                onAction: () => ref.invalidate(jobsProvider),
+              ),
+            ),
+          ],
           data: (jobs) {
             final visible = jobs
                 .where(
@@ -297,26 +374,24 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                 )
                 .toList();
             if (visible.isEmpty) {
-              return StatusView(
-                icon: Icons.search_off,
-                title: AppStrings.supportFilterEmptyTitle,
-                body: AppStrings.supportFilterEmptyBody,
-                actionLabel: AppStrings.tryAgain,
-                onAction: () {
-                  setState(() {
-                    _selectedFilter = 0;
-                    _query = '';
-                    _searchController.clear();
-                  });
-                },
-              );
+              return <Widget>[
+                SliverToBoxAdapter(
+                  child: StatusView(
+                    icon: Icons.search_off,
+                    title: AppStrings.supportFilterEmptyTitle,
+                    body: AppStrings.supportFilterEmptyBody,
+                    actionLabel: AppStrings.tryAgain,
+                    onAction: _clearFilters,
+                  ),
+                ),
+              ];
             }
-            final applications = ref.watch(jobApplicationsProvider).valueOrNull ??
-                const <JobApplication>[];
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Padding(
+            final applications =
+                ref.watch(jobApplicationsProvider).valueOrNull ??
+                    const <JobApplication>[];
+            return <Widget>[
+              const SliverToBoxAdapter(
+                child: Padding(
                   padding: EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
                     AppSpacing.xs,
@@ -331,18 +406,14 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: _JobListView(
-                    jobs: visible,
-                    appliedJobIds: {
-                      for (final application in applications)
-                        application.jobId,
-                    },
-                    onApply: _apply,
-                  ),
-                ),
-              ],
-            );
+              ),
+              _jobCardsSliver(
+                visible,
+                <String>{
+                  for (final application in applications) application.jobId,
+                },
+              ),
+            ];
           },
         );
       },
@@ -384,21 +455,21 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Good morning!',
-                  style: TextStyle(
+                  JobsScreen.greetingFor(DateTime.now()),
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.3,
                     color: AppColors.cardInk,
                   ),
                 ),
-                SizedBox(height: 2),
-                Text(
+                const SizedBox(height: 2),
+                const Text(
                   'Discover jobs that fit your needs.',
                   style: TextStyle(
                     fontSize: 13,
@@ -607,11 +678,42 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
+  /// Fills the search box with the words spoken into the mic. When nothing
+  /// was heard (or the device has no recogniser) the reason is shown in a
+  /// snackbar so a silent failure never reads as "voice search is broken".
+  Future<void> _voiceSearch() async {
+    if (_voiceListening) return;
+    setState(() => _voiceListening = true);
+    try {
+      final result = await ref.read(voiceInputProvider)();
+      if (!mounted) return;
+      final words = result.text.trim();
+      if (result.status == VoiceInputStatus.recognized && words.isNotEmpty) {
+        setState(() {
+          _query = words;
+          _searchController.text = words;
+          _searchController.selection = TextSelection.collapsed(
+            offset: words.length,
+          );
+        });
+      } else {
+        final message = result.status == VoiceInputStatus.noSpeech
+            ? AppStrings.voiceNoSpeech
+            : AppStrings.voiceUnavailable;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) setState(() => _voiceListening = false);
+    }
+  }
+
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
-        AppSpacing.md,
+        AppSpacing.sm,
         AppSpacing.pagePadding,
         AppSpacing.sm,
       ),
@@ -621,11 +723,14 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
         onChanged: (value) => setState(() => _query = value),
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: AppStrings.jobsSearchHint,
+          hintText: AppStrings.jobsVoiceSearchHint,
           prefixIcon: const Icon(Icons.search),
-          suffixIcon: _query.isEmpty
-              ? null
-              : IconButton(
+          // Clear (when there is text) plus the mic that searches by voice.
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_query.isNotEmpty)
+                IconButton(
                   tooltip: 'Clear search',
                   onPressed: () {
                     _searchController.clear();
@@ -633,6 +738,19 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                   },
                   icon: const Icon(Icons.close),
                 ),
+              IconButton(
+                tooltip: AppStrings.jobsVoiceSearch,
+                onPressed: _voiceListening ? null : _voiceSearch,
+                icon: _voiceListening
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.mic, color: AppColors.primary),
+              ),
+            ],
+          ),
           fillColor: Colors.white,
           filled: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
@@ -653,86 +771,55 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     );
   }
 
+  /// Category filters. A [Wrap] instead of a fixed-height horizontal list:
+  /// every label stays fully visible and the row grows onto a second line
+  /// rather than clipping text at the screen edge.
   Widget _buildFilterRow() {
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.pagePadding,
-          vertical: AppSpacing.sm,
-        ),
-        itemCount: _filters.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final selected = _selectedFilter == index;
-          return Semantics(
-            button: true,
-            selected: selected,
-            label: _filters[index],
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedFilter = index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.navBar : Colors.white,
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(
-                    color: selected
-                        ? AppColors.navBar
-                        : AppColors.cardBorder,
-                    width: 1.2,
-                  ),
-                ),
-                child: Text(
-                  _filters[index],
-                  style: TextStyle(
-                    color: selected ? Colors.white : AppColors.cardInk,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// A scrollable list of [JobCard]s shared by the standard and support-filter
-/// views.
-class _JobListView extends StatelessWidget {
-  const _JobListView({
-    required this.jobs,
-    required this.appliedJobIds,
-    required this.onApply,
-  });
-
-  final List<Job> jobs;
-  final Set<String> appliedJobIds;
-  final ValueChanged<Job> onApply;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
+    return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.pagePadding,
         vertical: AppSpacing.sm,
       ),
-      itemCount: jobs.length,
-      itemBuilder: (context, index) {
-        final job = jobs[index];
-        return _JobCard(
-          job: job,
-          applied: appliedJobIds.contains(job.id),
-          onApply: () => onApply(job),
-        );
-      },
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          for (var index = 0; index < _filters.length; index++)
+            _buildFilterChip(index),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(int index) {
+    final selected = _selectedFilter == index;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: _filters[index],
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedFilter = index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.navBar : Colors.white,
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(
+              color: selected ? AppColors.navBar : AppColors.cardBorder,
+              width: 1.2,
+            ),
+          ),
+          child: Text(
+            _filters[index],
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.cardInk,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
