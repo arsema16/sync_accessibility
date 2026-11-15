@@ -79,7 +79,10 @@ class InMemoryAuthService implements AuthService {
   }) async {
     final key = _normalise(email);
     if (_accountsByEmail.containsKey(key)) {
-      throw const AuthFailure('An account with that email already exists.');
+      throw const AuthFailure(
+        'An account with that email already exists.',
+        code: 'user_already_exists',
+      );
     }
     if (password.length < 6) {
       throw const AuthFailure(

@@ -88,20 +88,39 @@ class _AuthFormState extends ConsumerState<AuthForm> {
     final password = _passwordController.text;
 
     try {
-      final SyncUser user;
+      SyncUser user;
       if (_signUp) {
         user = await auth.signUp(email: email, password: password);
         if (auth.currentUser == null) {
-          // Account created but email confirmation is pending: switch to
-          // sign-in mode and tell the user what to do next.
-          if (!mounted) return;
-          setState(() {
-            _loading = false;
-            _notice = AppStrings.confirmationSent(email);
-            _signUp = false;
-            _passwordController.clear();
-          });
-          return;
+          // Sign-up opened no session: either the address still needs email
+          // confirming, or it already belongs to an account (Supabase
+          // answers 200 — not an error — for a repeat sign-up while email
+          // confirmation is required). A sign-in probe tells the cases
+          // apart so this mode always reports what actually happened:
+          //   confirmed + same password  -> signed straight in
+          //   unconfirmed                 -> "check your inbox" notice
+          //   confirmed + other password  -> hand over to sign-in
+          try {
+            user = await auth.signIn(email: email, password: password);
+          } on AuthFailure catch (probe) {
+            if (!mounted) return;
+            setState(() {
+              _loading = false;
+              _signUp = false;
+              _passwordController.clear();
+              if (probe.code == 'email_not_confirmed') {
+                _notice = AppStrings.confirmationSent(email);
+              } else if (probe.code == 'invalid_credentials' ||
+                  probe.code == 'invalid_grant') {
+                _notice = AppStrings.accountExistsSignIn;
+              } else {
+                // Rate limit or connection trouble: show the real reason
+                // instead of guessing at the account state.
+                _error = probe.message;
+              }
+            });
+            return;
+          }
         }
       } else {
         user = await auth.signIn(email: email, password: password);
@@ -111,6 +130,18 @@ class _AuthFormState extends ConsumerState<AuthForm> {
       widget.onCompleted(user);
     } on AuthFailure catch (failure) {
       if (!mounted) return;
+      if (failure.code == 'user_already_exists' ||
+          failure.code == 'email_exists') {
+        // The email is taken: hand over to sign-in with the address kept
+        // so the user only has to enter their password.
+        setState(() {
+          _loading = false;
+          _signUp = false;
+          _passwordController.clear();
+          _notice = AppStrings.accountExistsSignIn;
+        });
+        return;
+      }
       setState(() {
         _loading = false;
         _error = failure.message;
@@ -331,6 +362,26 @@ class _Message extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Explains that this build carries no Supabase credentials: accounts live
+/// only in this device's memory, so sign-in can never work after an app
+/// restart. Used by the sign-in screen — its content scrolls, so the notice
+/// never has to squeeze into the apply dialog's fixed height.
+class LocalModeBanner extends StatelessWidget {
+  const LocalModeBanner({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Message(
+      message: AppStrings.localAuthModeNotice,
+      icon: Icons.cloud_off,
+      color: theme.colorScheme.error,
+      background: theme.colorScheme.errorContainer,
+      foreground: theme.colorScheme.onErrorContainer,
     );
   }
 }

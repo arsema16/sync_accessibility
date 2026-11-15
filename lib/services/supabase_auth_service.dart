@@ -133,7 +133,8 @@ class SupabaseAuthService implements AuthService {
       case 'invalid_grant':
         return 'Email or password is incorrect.';
       case 'email_not_confirmed':
-        return 'Please confirm your email address before signing in.';
+        return 'Confirm your email address first — open the link in the '
+            'SYNC email (look in your spam folder).';
       case 'user_already_exists':
       case 'email_exists':
         return 'An account with that email already exists.';

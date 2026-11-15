@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/supabase_config.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/route_names.dart';
 import '../../../core/providers/app_providers.dart';
@@ -163,6 +164,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
+        // A build without Supabase credentials stores accounts in this
+        // device's memory only — say so up front, because otherwise
+        // "sign in" can never work after an app restart and nothing on
+        // screen explains why. The form itself stays banner-free so the
+        // apply dialog's fixed height keeps room for its mode toggle.
+        if (!SupabaseBootstrap.useSupabase) ...[
+          const LocalModeBanner(),
+          const SizedBox(height: AppSpacing.md),
+        ],
         AuthForm(
           onCompleted: (user) {
             // A fresh session goes straight to the job listings; the rest of
