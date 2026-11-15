@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "sync_accessibility" "\0"
+            VALUE "FileDescription", "SYNC" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "sync_accessibility" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "sync_accessibility.exe" "\0"
-            VALUE "ProductName", "sync_accessibility" "\0"
+            VALUE "ProductName", "SYNC" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,11 +1,11 @@
 {
-    "name": "sync_accessibility",
-    "short_name": "sync_accessibility",
+    "name": "SYNC",
+    "short_name": "SYNC",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1B7A6E",
+    "theme_color": "#1B7A6E",
+    "description": "SYNC — accessible job onboarding and career gateway.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
